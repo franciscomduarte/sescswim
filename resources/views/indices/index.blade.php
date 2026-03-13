@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-800">Índices Técnicos - Campeonato Brasileiro</h1>
-        <p class="text-sm text-gray-500 mt-1">Compare os tempos dos atletas com os índices técnicos de inverno (1º semestre) e verão (2º semestre)</p>
+        <p class="text-sm text-gray-500 mt-1">Melhores tempos de provas finalizadas comparados com os índices técnicos de inverno (1º semestre) e verão (2º semestre)</p>
     </div>
 
     {{-- Filtros --}}
@@ -88,10 +88,10 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Competição</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prova</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Piscina</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Tempo</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Melhor Tempo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase text-[10px]">Competição</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-blue-600 uppercase" title="Índice de Inverno (1º Semestre)">Índ. Inverno</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-blue-600 uppercase">Diferença</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-orange-600 uppercase" title="Índice de Verão (2º Semestre)">Índ. Verão</th>
@@ -101,10 +101,10 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach($resultados as $r)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ $r->campeonato->nome }}</td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ $r->prova_chave }}</td>
                             <td class="px-4 py-3 text-sm text-center text-gray-500">{{ $r->piscina_resultado }}</td>
                             <td class="px-4 py-3 text-sm text-center font-mono font-bold text-gray-800">{{ $r->tempo }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-400">{{ $r->campeonato->nome }}</td>
 
                             {{-- Índice Inverno --}}
                             @if(isset($r->indice_inverno))
@@ -160,7 +160,7 @@
 
         @else
         <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            Nenhum resultado com tempo encontrado para este atleta.
+            Nenhum resultado confirmado encontrado para este atleta.
         </div>
         @endif
     @else

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Atleta;
 use App\Models\Campeonato;
+use App\Models\Inscricao;
 use App\Models\Resultado;
 use Illuminate\Http\Request;
 
@@ -36,53 +37,60 @@ class IndicesController extends Controller
             $query = Resultado::with(['atleta', 'prova', 'distancia', 'campeonato'])
                 ->where('atleta_id', $filtros['atleta_id'])
                 ->whereNotNull('tempo')
-                ->where('tempo', '!=', '');
+                ->where('tempo', '!=', '')
+                ->whereHas('inscricao', fn ($q) => $q->where('status', 'Finalizada'));
 
             if (!empty($filtros['campeonato_id'])) {
                 $query->where('campeonato_id', $filtros['campeonato_id']);
             }
 
-            $resultados = $query->orderBy('campeonato_id')->get();
+            $todosResultados = $query->get();
 
             $indices = config('indices_tecnicos');
             $categoria = $filtros['categoria'];
 
-            $resultados = $resultados->map(function ($resultado) use ($indices, $filtros, $categoria) {
-                $piscina = $resultado->piscina ?? $resultado->campeonato->piscina ?? '25m';
-                $chave = $filtros['sexo'] . '_' . $piscina;
-                $provaChave = $this->normalizarProvaChave($resultado->distancia->metragem, $resultado->prova->nome);
+            // Agrupa por prova+distância+piscina e mantém apenas o melhor tempo
+            $melhores = $todosResultados
+                ->map(function ($resultado) {
+                    $piscina = $resultado->piscina ?? $resultado->campeonato->piscina ?? '25m';
+                    $resultado->tempo_cs = $this->tempoParaCentesimos($resultado->tempo);
+                    $resultado->prova_chave = $this->normalizarProvaChave($resultado->distancia->metragem, $resultado->prova->nome);
+                    $resultado->piscina_resultado = $piscina;
 
-                $tempoCs = $this->tempoParaCentesimos($resultado->tempo);
-                $resultado->tempo_cs = $tempoCs;
-                $resultado->prova_chave = $provaChave;
-                $resultado->piscina_resultado = $piscina;
+                    return $resultado;
+                })
+                ->filter(fn ($r) => $r->tempo_cs !== null)
+                ->groupBy(fn ($r) => $r->prova_chave . '_' . $r->piscina_resultado)
+                ->map(fn ($grupo) => $grupo->sortBy('tempo_cs')->first());
 
-                $indicesProva = $indices[$chave][$provaChave] ?? null;
+            $resultados = $melhores->values()->map(function ($resultado) use ($indices, $filtros, $categoria) {
+                $chave = $filtros['sexo'] . '_' . $resultado->piscina_resultado;
+                $indicesProva = $indices[$chave][$resultado->prova_chave] ?? null;
 
-                if ($indicesProva && $tempoCs) {
+                if ($indicesProva) {
                     // Índice de Inverno (1º semestre) - sufixo _V no config
                     $chaveInverno = $categoria . '_V';
                     if (isset($indicesProva[$chaveInverno])) {
                         $resultado->indice_inverno = $indicesProva[$chaveInverno];
-                        $resultado->diff_inverno = $tempoCs - $indicesProva[$chaveInverno];
+                        $resultado->diff_inverno = $resultado->tempo_cs - $indicesProva[$chaveInverno];
                     } elseif (isset($indicesProva[$categoria])) {
                         $resultado->indice_inverno = $indicesProva[$categoria];
-                        $resultado->diff_inverno = $tempoCs - $indicesProva[$categoria];
+                        $resultado->diff_inverno = $resultado->tempo_cs - $indicesProva[$categoria];
                     }
 
                     // Índice de Verão (2º semestre) - sufixo _I no config
                     $chaveVerao = $categoria . '_I';
                     if (isset($indicesProva[$chaveVerao])) {
                         $resultado->indice_verao = $indicesProva[$chaveVerao];
-                        $resultado->diff_verao = $tempoCs - $indicesProva[$chaveVerao];
+                        $resultado->diff_verao = $resultado->tempo_cs - $indicesProva[$chaveVerao];
                     } elseif (isset($indicesProva[$categoria])) {
                         $resultado->indice_verao = $indicesProva[$categoria];
-                        $resultado->diff_verao = $tempoCs - $indicesProva[$categoria];
+                        $resultado->diff_verao = $resultado->tempo_cs - $indicesProva[$categoria];
                     }
                 }
 
                 return $resultado;
-            });
+            })->sortBy('prova_chave')->values();
         }
 
         return view('indices.index', [
