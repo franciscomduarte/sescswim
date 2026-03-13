@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Atleta;
 use App\Models\Campeonato;
-use App\Models\Inscricao;
 use App\Models\Resultado;
 use Illuminate\Http\Request;
 
@@ -38,7 +37,7 @@ class IndicesController extends Controller
                 ->where('atleta_id', $filtros['atleta_id'])
                 ->whereNotNull('tempo')
                 ->where('tempo', '!=', '')
-                ->whereHas('inscricao', fn ($q) => $q->where('status', 'Finalizada'));
+                ->whereIn('status_lancamento', ['Lançado', 'Confirmado']);
 
             if (!empty($filtros['campeonato_id'])) {
                 $query->where('campeonato_id', $filtros['campeonato_id']);
