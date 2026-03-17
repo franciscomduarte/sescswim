@@ -52,7 +52,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Piscina</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inscritos</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resultados</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Ações</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -69,14 +69,16 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $c->inscricoes_count }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $c->resultados_count }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                            <a href="{{ route('campeonatos.edit', $c) }}" class="text-gray-600 hover:underline">Editar</a>
-                            <a href="{{ route('painel.show', $c) }}" class="text-blue-600 hover:underline">Painel</a>
-                            <form action="{{ route('campeonatos.destroy', $c) }}" method="POST" class="inline" onsubmit="return confirm('Excluir campeonato e todos os dados relacionados?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline">Excluir</button>
-                            </form>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('campeonatos.edit', $c) }}" class="text-gray-600 hover:underline">Editar</a>
+                                <a href="{{ route('painel.show', $c) }}" class="text-blue-600 hover:underline">Painel</a>
+                                <form action="{{ route('campeonatos.destroy', $c) }}" method="POST" class="inline" onsubmit="return confirm('Excluir campeonato e todos os dados relacionados?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:underline">Excluir</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

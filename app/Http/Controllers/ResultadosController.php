@@ -34,13 +34,30 @@ class ResultadosController extends Controller
             'bronze' => (clone $queryMedalhas)->where('medalha', 'Bronze')->count(),
         ];
 
-        // KPI - Medalhas de revezamento
-        $queryMedalhasRev = $this->queryEquipes($filtros)->whereNotNull('medalha');
+        // KPI - Medalhas de revezamento (1 por atleta da equipe)
+        $equipesComMedalha = $this->queryEquipes($filtros)
+            ->whereNotNull('medalha')
+            ->with('membros')
+            ->get();
+
         $medalhasRevezamento = [
-            'ouro'   => (clone $queryMedalhasRev)->where('medalha', 'Ouro')->count(),
-            'prata'  => (clone $queryMedalhasRev)->where('medalha', 'Prata')->count(),
-            'bronze' => (clone $queryMedalhasRev)->where('medalha', 'Bronze')->count(),
+            'ouro'   => $equipesComMedalha->where('medalha', 'Ouro')->sum(fn($e) => $e->membros->count()),
+            'prata'  => $equipesComMedalha->where('medalha', 'Prata')->sum(fn($e) => $e->membros->count()),
+            'bronze' => $equipesComMedalha->where('medalha', 'Bronze')->sum(fn($e) => $e->membros->count()),
         ];
+
+        // Relay medals per athlete (for desempenho table)
+        $relayMedalsPorAtleta = [];
+        foreach ($equipesComMedalha as $equipe) {
+            $key = strtolower($equipe->medalha); // 'ouro', 'prata', 'bronze'
+            foreach ($equipe->membros as $membro) {
+                $id = $membro->atleta_id;
+                if (!isset($relayMedalsPorAtleta[$id])) {
+                    $relayMedalsPorAtleta[$id] = ['ouro' => 0, 'prata' => 0, 'bronze' => 0];
+                }
+                $relayMedalsPorAtleta[$id][$key]++;
+            }
+        }
 
         // KPI - Total RCOs individuais
         $queryRcos = Resultado::where('rco', true);
@@ -134,7 +151,7 @@ class ResultadosController extends Controller
 
         return view('resultados.index', compact(
             'campeonatos', 'atletas', 'filtros', 'medalhas', 'medalhasRevezamento', 'totalRcos',
-            'desempenhoAtletas', 'resultadosCompeticao', 'comparacaoPiscina',
+            'desempenhoAtletas', 'relayMedalsPorAtleta', 'resultadosCompeticao', 'comparacaoPiscina',
             'revezamentos', 'recordesIndividuais', 'recordesRevezamento', 'premiacoes'
         ));
     }

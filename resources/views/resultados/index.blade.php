@@ -95,12 +95,40 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($desempenhoAtletas as $d)
+                        @php $rev = $relayMedalsPorAtleta[$d->atleta_id] ?? null; @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-3 text-sm font-medium text-gray-800">{{ $d->atleta->nome }}</td>
                             <td class="px-6 py-3 text-sm text-center text-gray-500">{{ $d->total_provas }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-yellow-600">{{ $d->ouro ?: '-' }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-gray-400">{{ $d->prata ?: '-' }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-orange-500">{{ $d->bronze ?: '-' }}</td>
+                            <td class="px-6 py-3 text-sm text-center">
+                                @if($d->ouro || ($rev && $rev['ouro'] > 0))
+                                    <span class="font-bold text-yellow-600">{{ $d->ouro ?: 0 }}</span>
+                                    @if($rev && $rev['ouro'] > 0)
+                                        <div class="text-xs text-yellow-500 leading-tight">+{{ $rev['ouro'] }} rev</div>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-3 text-sm text-center">
+                                @if($d->prata || ($rev && $rev['prata'] > 0))
+                                    <span class="font-bold text-gray-400">{{ $d->prata ?: 0 }}</span>
+                                    @if($rev && $rev['prata'] > 0)
+                                        <div class="text-xs text-gray-400 leading-tight">+{{ $rev['prata'] }} rev</div>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-3 text-sm text-center">
+                                @if($d->bronze || ($rev && $rev['bronze'] > 0))
+                                    <span class="font-bold text-orange-500">{{ $d->bronze ?: 0 }}</span>
+                                    @if($rev && $rev['bronze'] > 0)
+                                        <div class="text-xs text-orange-400 leading-tight">+{{ $rev['bronze'] }} rev</div>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-3 text-sm text-center text-gray-500">{{ $d->quarto ?: '-' }}</td>
                             <td class="px-6 py-3 text-sm text-center text-gray-500">{{ $d->quinto ?: '-' }}</td>
                             <td class="px-6 py-3 text-sm text-center text-gray-500">{{ $d->sexto ?: '-' }}</td>
