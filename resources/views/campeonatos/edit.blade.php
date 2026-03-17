@@ -150,39 +150,53 @@
                     <table class="min-w-full">
                         <thead>
                             <tr class="text-xs text-gray-500 uppercase">
-                                <th class="px-6 py-2 text-left">#</th>
-                                <th class="px-6 py-2 text-left">Atleta</th>
-                                <th class="px-6 py-2 text-center">Tempo</th>
-                                <th class="px-6 py-2 text-center">Medalha</th>
-                                <th class="px-6 py-2 text-center">Status</th>
-                                <th class="px-6 py-2 text-right">Ação</th>
+                                <th class="px-4 py-2 text-left">#</th>
+                                <th class="px-4 py-2 text-left">Atleta</th>
+                                <th class="px-4 py-2 text-center">Tempo</th>
+                                <th class="px-4 py-2 text-center">Medalha</th>
+                                <th class="px-4 py-2 text-center">RCO</th>
+                                <th class="px-4 py-2 text-center">Status</th>
+                                <th class="px-4 py-2 text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($resultadosProva as $resultado)
                                 @php
-                                    $medalhaIcon = match($resultado->medalha) {
-                                        'Ouro' => '🥇',
-                                        'Prata' => '🥈',
-                                        'Bronze' => '🥉',
-                                        default => '-',
-                                    };
                                     $statusClass = match($resultado->status_lancamento) {
-                                        'Pendente' => 'bg-gray-200 text-gray-700',
-                                        'Lançado' => 'bg-blue-200 text-blue-800',
+                                        'Pendente'   => 'bg-gray-200 text-gray-700',
+                                        'Lançado'    => 'bg-blue-200 text-blue-800',
                                         'Confirmado' => 'bg-green-200 text-green-800',
-                                        default => 'bg-gray-200',
+                                        default      => 'bg-gray-200',
                                     };
                                 @endphp
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-2 text-sm text-gray-500">{{ $resultado->colocacao ?? '-' }}º</td>
-                                    <td class="px-6 py-2 text-sm font-medium text-gray-700">{{ $resultado->atleta->nome }}</td>
-                                    <td class="px-6 py-2 text-sm text-center font-mono">{{ $resultado->tempo ?? '-' }}</td>
-                                    <td class="px-6 py-2 text-sm text-center">{{ $medalhaIcon }}</td>
-                                    <td class="px-6 py-2 text-center">
+                                <tbody x-data="{ editing: false }">
+                                {{-- Linha de visualização --}}
+                                <tr class="hover:bg-gray-50" x-show="!editing">
+                                    <td class="px-4 py-2 text-sm text-gray-500">{{ $resultado->colocacao ? $resultado->colocacao.'º' : '-' }}</td>
+                                    <td class="px-4 py-2 text-sm font-medium text-gray-700">{{ $resultado->atleta->nome }}</td>
+                                    <td class="px-4 py-2 text-sm text-center font-mono">{{ $resultado->tempo ?? '-' }}</td>
+                                    <td class="px-4 py-2 text-sm text-center">
+                                        @if($resultado->medalha)
+                                            <span class="text-xs px-2 py-0.5 rounded-full font-semibold
+                                                {{ $resultado->medalha === 'Ouro' ? 'bg-yellow-100 text-yellow-700' : ($resultado->medalha === 'Prata' ? 'bg-gray-100 text-gray-600' : 'bg-orange-100 text-orange-600') }}">
+                                                {{ $resultado->medalha }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-center">
+                                        @if($resultado->rco)
+                                            <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">RCO</span>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-center">
                                         <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $statusClass }}">{{ $resultado->status_lancamento }}</span>
                                     </td>
-                                    <td class="px-6 py-2 text-right">
+                                    <td class="px-4 py-2 text-right whitespace-nowrap">
+                                        <button @click="editing = true" class="text-xs text-blue-600 hover:underline mr-2">Editar</button>
                                         <form action="{{ route('campeonatos.remover-resultado', [$campeonato, $resultado]) }}" method="POST" class="inline" onsubmit="return confirm('Remover resultado de {{ $resultado->atleta->nome }}?')">
                                             @csrf
                                             @method('DELETE')
@@ -190,6 +204,55 @@
                                         </form>
                                     </td>
                                 </tr>
+                                {{-- Linha de edição --}}
+                                <tr x-show="editing" x-cloak class="bg-blue-50">
+                                    <td colspan="7" class="px-4 py-3">
+                                        <form action="{{ route('campeonatos.atualizar-resultado', [$campeonato, $resultado]) }}" method="POST">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="flex flex-wrap items-end gap-3">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Colocação</label>
+                                                    <input type="number" name="colocacao" value="{{ $resultado->colocacao }}" min="1"
+                                                           class="w-16 border rounded p-1.5 text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Tempo</label>
+                                                    <input type="text" name="tempo" value="{{ $resultado->tempo }}" placeholder="00:00.00"
+                                                           class="w-28 border rounded p-1.5 text-sm font-mono">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Medalha</label>
+                                                    <select name="medalha" class="border rounded p-1.5 text-sm">
+                                                        <option value="">Nenhuma</option>
+                                                        <option value="Ouro"   {{ $resultado->medalha === 'Ouro'   ? 'selected' : '' }}>Ouro</option>
+                                                        <option value="Prata"  {{ $resultado->medalha === 'Prata'  ? 'selected' : '' }}>Prata</option>
+                                                        <option value="Bronze" {{ $resultado->medalha === 'Bronze' ? 'selected' : '' }}>Bronze</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">Status</label>
+                                                    <select name="status_lancamento" class="border rounded p-1.5 text-sm">
+                                                        <option value="Pendente"   {{ $resultado->status_lancamento === 'Pendente'   ? 'selected' : '' }}>Pendente</option>
+                                                        <option value="Lançado"    {{ $resultado->status_lancamento === 'Lançado'    ? 'selected' : '' }}>Lançado</option>
+                                                        <option value="Confirmado" {{ $resultado->status_lancamento === 'Confirmado' ? 'selected' : '' }}>Confirmado</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 pb-1">
+                                                    <input type="checkbox" name="rco" value="1" id="rco_{{ $resultado->id }}"
+                                                           {{ $resultado->rco ? 'checked' : '' }}
+                                                           class="rounded border-gray-300 text-purple-600">
+                                                    <label for="rco_{{ $resultado->id }}" class="text-sm font-medium text-gray-700">RCO</label>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-semibold hover:bg-blue-700">Salvar</button>
+                                                    <button type="button" @click="editing = false" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
                             @endforeach
                         </tbody>
                     </table>

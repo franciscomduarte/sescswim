@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - @yield('title', 'Sistema de Natação')</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>[x-cloak]{display:none!important}</style>
     @livewireStyles
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -21,8 +22,6 @@
                         @endauth
                         <a href="{{ route('resultados.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Resultados</a>
                         <a href="{{ route('indices.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Índices</a>
-                        <a href="{{ route('brasileiro.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Brasileiro</a>
-                        <a href="{{ route('premiacoes.relatorio') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Premiações</a>
                         @auth
                             <div x-data="{ open: false }" class="relative">
                                 <button @click="open = !open" @click.outside="open = false"
@@ -69,7 +68,6 @@
             @endauth
             <a href="{{ route('resultados.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Resultados</a>
             <a href="{{ route('indices.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Índices</a>
-            <a href="{{ route('premiacoes.relatorio') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Premiações</a>
             @auth
                 <div x-data="{ open: false }">
                     <button @click="open = !open"

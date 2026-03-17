@@ -62,60 +62,6 @@
         </div>
     </div>
 
-    {{-- Resultados Detalhados por Prova (apenas com campeonato filtrado) --}}
-    @if($resultadosDetalhados->isNotEmpty())
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50">
-            <h2 class="text-lg font-bold text-gray-800">Resultados por Prova (até 8º lugar)</h2>
-        </div>
-        <div class="divide-y divide-gray-100">
-            @foreach($resultadosDetalhados as $provaLabel => $resultados)
-            <div class="p-4">
-                <h3 class="text-sm font-bold text-blue-700 mb-2">{{ $provaLabel }}</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead>
-                            <tr class="text-left text-xs text-gray-500 uppercase">
-                                <th class="pr-4 py-1">#</th>
-                                <th class="pr-4 py-1">Atleta</th>
-                                <th class="pr-4 py-1">Tempo</th>
-                                <th class="pr-4 py-1">Medalha</th>
-                                <th class="py-1">RCO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($resultados as $r)
-                            <tr class="{{ $r->rco ? 'bg-purple-50' : '' }}">
-                                <td class="pr-4 py-1 font-bold
-                                    {{ $r->colocacao == 1 ? 'text-yellow-500' : ($r->colocacao == 2 ? 'text-gray-400' : ($r->colocacao == 3 ? 'text-orange-500' : 'text-gray-500')) }}">
-                                    {{ $r->colocacao }}º
-                                </td>
-                                <td class="pr-4 py-1 font-medium text-gray-800">{{ $r->atleta->nome }}</td>
-                                <td class="pr-4 py-1 text-gray-600 font-mono">{{ $r->tempo ?? '—' }}</td>
-                                <td class="pr-4 py-1">
-                                    @if($r->medalha)
-                                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold
-                                            {{ $r->medalha === 'Ouro' ? 'bg-yellow-100 text-yellow-700' : ($r->medalha === 'Prata' ? 'bg-gray-100 text-gray-600' : 'bg-orange-100 text-orange-600') }}">
-                                            {{ $r->medalha }}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="py-1">
-                                    @if($r->rco)
-                                        <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">RCO</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
     {{-- Desempenho por Atleta --}}
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50">

@@ -84,22 +84,6 @@ class ResultadosController extends Controller
             ->groupBy('piscina')
             ->get();
 
-        // Resultados detalhados (até 8º lugar por prova) — apenas quando campeonato selecionado
-        $resultadosDetalhados = collect();
-        if (!empty($filtros['campeonato_id'])) {
-            $resultadosDetalhados = Resultado::with(['atleta', 'prova', 'distancia'])
-                ->where('campeonato_id', $filtros['campeonato_id'])
-                ->whereNotNull('colocacao')
-                ->where('colocacao', '<=', 8)
-                ->orderBy('colocacao')
-                ->get()
-                ->groupBy(function ($r) {
-                    $prova = $r->prova?->nome ?? 'Prova';
-                    $dist = $r->distancia?->metros ?? '';
-                    return $prova . ($dist ? " — {$dist}m" : '');
-                });
-        }
-
         // Revezamentos (até 8º lugar)
         $revezamentos = $this->queryEquipes($filtros)
             ->whereNotNull('colocacao')
@@ -143,8 +127,7 @@ class ResultadosController extends Controller
         return view('resultados.index', compact(
             'campeonatos', 'atletas', 'filtros', 'medalhas', 'totalRcos',
             'desempenhoAtletas', 'resultadosCompeticao', 'comparacaoPiscina',
-            'resultadosDetalhados', 'revezamentos',
-            'recordesIndividuais', 'recordesRevezamento', 'premiacoes'
+            'revezamentos', 'recordesIndividuais', 'recordesRevezamento', 'premiacoes'
         ));
     }
 

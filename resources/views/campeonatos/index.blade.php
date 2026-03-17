@@ -3,7 +3,7 @@
 @section('title', 'Campeonatos')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div>
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Campeonatos</h1>
     </div>
@@ -43,7 +43,7 @@
         @endif
     </form>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>

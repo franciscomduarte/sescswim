@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/campeonatos/{campeonato}', [CampeonatoController::class, 'destroy'])->name('campeonatos.destroy');
     Route::delete('/campeonatos/{campeonato}/inscricao/{inscricao}', [CampeonatoController::class, 'removerInscricao'])->name('campeonatos.remover-inscricao');
     Route::delete('/campeonatos/{campeonato}/resultado/{resultado}', [CampeonatoController::class, 'removerResultado'])->name('campeonatos.remover-resultado');
+    Route::put('/campeonatos/{campeonato}/resultado/{resultado}', [CampeonatoController::class, 'atualizarResultado'])->name('campeonatos.atualizar-resultado');
 
     // Premiações (aninhadas ao campeonato)
     Route::post('/campeonatos/{campeonato}/premiacoes', [PremiacaoController::class, 'store'])->name('campeonatos.premiacoes.store');

@@ -95,6 +95,40 @@ class CampeonatoController extends Controller
         return redirect()->route('campeonatos.edit', $campeonato)->with('success', 'Inscrição removida!');
     }
 
+    public function atualizarResultado(Request $request, Campeonato $campeonato, Resultado $resultado)
+    {
+        $validated = $request->validate([
+            'tempo'             => 'nullable|string|max:20',
+            'colocacao'         => 'nullable|integer|min:1',
+            'medalha'           => 'nullable|in:Ouro,Prata,Bronze',
+            'rco'               => 'boolean',
+            'status_lancamento' => 'required|in:Pendente,Lançado,Confirmado',
+        ]);
+
+        $resultado->update([
+            'tempo'             => $validated['tempo'] ?: null,
+            'colocacao'         => $validated['colocacao'] ?: null,
+            'medalha'           => $validated['medalha'] ?: null,
+            'rco'               => $request->boolean('rco'),
+            'status_lancamento' => $validated['status_lancamento'],
+        ]);
+
+        $statusInscricao = match($validated['status_lancamento']) {
+            'Confirmado' => 'Finalizada',
+            'Lançado'    => 'Em andamento',
+            default      => 'Pendente',
+        };
+
+        Inscricao::where([
+            'campeonato_id' => $campeonato->id,
+            'atleta_id'     => $resultado->atleta_id,
+            'prova_id'      => $resultado->prova_id,
+            'distancia_id'  => $resultado->distancia_id,
+        ])->update(['status' => $statusInscricao]);
+
+        return redirect()->route('campeonatos.edit', $campeonato)->with('success', 'Resultado atualizado!');
+    }
+
     public function removerResultado(Campeonato $campeonato, Resultado $resultado)
     {
         $atletaId = $resultado->atleta_id;
