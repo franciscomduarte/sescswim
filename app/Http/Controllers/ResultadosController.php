@@ -34,6 +34,14 @@ class ResultadosController extends Controller
             'bronze' => (clone $queryMedalhas)->where('medalha', 'Bronze')->count(),
         ];
 
+        // KPI - Medalhas de revezamento
+        $queryMedalhasRev = $this->queryEquipes($filtros)->whereNotNull('medalha');
+        $medalhasRevezamento = [
+            'ouro'   => (clone $queryMedalhasRev)->where('medalha', 'Ouro')->count(),
+            'prata'  => (clone $queryMedalhasRev)->where('medalha', 'Prata')->count(),
+            'bronze' => (clone $queryMedalhasRev)->where('medalha', 'Bronze')->count(),
+        ];
+
         // KPI - Total RCOs individuais
         $queryRcos = Resultado::where('rco', true);
         $this->aplicarFiltros($queryRcos, $filtros);
@@ -125,7 +133,7 @@ class ResultadosController extends Controller
         $premiacoes = $queryPremiacoes->orderByDesc('data_inicio')->get();
 
         return view('resultados.index', compact(
-            'campeonatos', 'atletas', 'filtros', 'medalhas', 'totalRcos',
+            'campeonatos', 'atletas', 'filtros', 'medalhas', 'medalhasRevezamento', 'totalRcos',
             'desempenhoAtletas', 'resultadosCompeticao', 'comparacaoPiscina',
             'revezamentos', 'recordesIndividuais', 'recordesRevezamento', 'premiacoes'
         ));

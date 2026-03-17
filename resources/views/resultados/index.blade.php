@@ -47,14 +47,23 @@
         <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow p-6 text-center border border-yellow-200">
             <div class="text-4xl font-bold text-yellow-600">{{ $medalhas['ouro'] }}</div>
             <div class="text-sm text-yellow-700 font-semibold mt-1">🥇 Ouro</div>
+            @if($medalhasRevezamento['ouro'] > 0)
+                <div class="text-xs text-yellow-600 mt-1">+{{ $medalhasRevezamento['ouro'] }} revezamento</div>
+            @endif
         </div>
         <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow p-6 text-center border border-gray-200">
             <div class="text-4xl font-bold text-gray-500">{{ $medalhas['prata'] }}</div>
             <div class="text-sm text-gray-600 font-semibold mt-1">🥈 Prata</div>
+            @if($medalhasRevezamento['prata'] > 0)
+                <div class="text-xs text-gray-500 mt-1">+{{ $medalhasRevezamento['prata'] }} revezamento</div>
+            @endif
         </div>
         <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow p-6 text-center border border-orange-200">
             <div class="text-4xl font-bold text-orange-600">{{ $medalhas['bronze'] }}</div>
             <div class="text-sm text-orange-700 font-semibold mt-1">🥉 Bronze</div>
+            @if($medalhasRevezamento['bronze'] > 0)
+                <div class="text-xs text-orange-500 mt-1">+{{ $medalhasRevezamento['bronze'] }} revezamento</div>
+            @endif
         </div>
         <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow p-6 text-center border border-purple-200">
             <div class="text-4xl font-bold text-purple-600">{{ $totalRcos }}</div>
