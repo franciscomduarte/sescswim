@@ -353,28 +353,38 @@
         </div>
     </div>
 
-    {{-- Comparação Piscina --}}
-    @if($comparacaoPiscina->count() > 0)
+    {{-- Total Geral por Piscina --}}
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50">
-            <h2 class="text-lg font-bold text-gray-800">Comparação 25m vs 50m</h2>
+            <h2 class="text-lg font-bold text-gray-800">Total Geral</h2>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
-            @foreach($comparacaoPiscina as $p)
+            @php
+                $piscinaLookup = $comparacaoPiscina->keyBy('piscina');
+            @endphp
+            @foreach(['25m', '50m'] as $tamanho)
+                @php
+                    $p = $piscinaLookup[$tamanho] ?? null;
+                    $revP = $relayMedalsPorPiscina[$tamanho] ?? ['ouro' => 0, 'prata' => 0, 'bronze' => 0];
+                    $total = $p ? $p->total : 0;
+                    $ouro   = ($p ? $p->ouro   : 0) + $revP['ouro'];
+                    $prata  = ($p ? $p->prata  : 0) + $revP['prata'];
+                    $bronze = ($p ? $p->bronze : 0) + $revP['bronze'];
+                @endphp
                 <div class="border rounded-lg p-4 text-center">
-                    <div class="text-lg font-bold text-blue-700 mb-2">Piscina {{ $p->piscina }}</div>
-                    <div class="text-sm text-gray-500 mb-3">{{ $p->total }} resultados</div>
+                    <div class="text-lg font-bold text-blue-700 mb-2">Piscina {{ $tamanho }}</div>
+                    <div class="text-sm text-gray-500 mb-3">{{ $total }} resultados</div>
                     <div class="flex justify-center gap-4">
                         <div>
-                            <div class="text-xl font-bold text-yellow-600">{{ $p->ouro }}</div>
+                            <div class="text-xl font-bold text-yellow-600">{{ $ouro }}</div>
                             <div class="text-xs text-gray-500">Ouro</div>
                         </div>
                         <div>
-                            <div class="text-xl font-bold text-gray-400">{{ $p->prata }}</div>
+                            <div class="text-xl font-bold text-gray-400">{{ $prata }}</div>
                             <div class="text-xs text-gray-500">Prata</div>
                         </div>
                         <div>
-                            <div class="text-xl font-bold text-orange-500">{{ $p->bronze }}</div>
+                            <div class="text-xl font-bold text-orange-500">{{ $bronze }}</div>
                             <div class="text-xs text-gray-500">Bronze</div>
                         </div>
                     </div>
@@ -382,6 +392,5 @@
             @endforeach
         </div>
     </div>
-    @endif
 </div>
 @endsection
