@@ -199,6 +199,151 @@
     </div>
     @endif
 
+    {{-- Equipes de Revezamento --}}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-gray-800">Equipes de Revezamento</h2>
+            <a href="{{ route('campeonatos.equipes.create', $campeonato) }}"
+               class="bg-blue-600 text-white text-sm py-1.5 px-4 rounded-md hover:bg-blue-700 font-semibold transition">
+                + Nova Equipe
+            </a>
+        </div>
+
+        @php $equipes = $campeonato->equipes()->with(['distancia', 'membros.atleta'])->orderBy('ordem_execucao')->get(); @endphp
+
+        @forelse($equipes as $equipe)
+            <div class="border-b last:border-b-0">
+                <div class="px-6 py-3 flex justify-between items-start">
+                    <div>
+                        <span class="font-semibold text-gray-800">{{ $equipe->nome }}</span>
+                        <span class="ml-2 text-xs px-2 py-0.5 rounded-full font-semibold
+                            {{ $equipe->modalidade === 'Misto' ? 'bg-purple-100 text-purple-700' : ($equipe->modalidade === 'Feminino' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700') }}">
+                            {{ $equipe->modalidade }}
+                        </span>
+                        <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                            {{ $equipe->tipo }} · 4×{{ $equipe->distancia->metragem }}
+                        </span>
+                        @if($equipe->ordem_execucao)
+                            <span class="ml-1 text-xs text-gray-400">[{{ str_pad($equipe->ordem_execucao, 2, '0', STR_PAD_LEFT) }}]</span>
+                        @endif
+                        <div class="mt-1 text-sm text-gray-500 space-y-0.5">
+                            @foreach($equipe->membros as $membro)
+                                <div>
+                                    <span class="text-gray-400 text-xs">{{ $membro->posicao }}.</span>
+                                    {{ $membro->atleta->nome }}
+                                    @if($equipe->tipo === 'Medley')
+                                        <span class="text-xs text-blue-500">({{ \App\Models\Equipe::MEDLEY_ESTILOS[$membro->posicao] }})</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0 ml-4">
+                        <a href="{{ route('campeonatos.equipes.edit', [$campeonato, $equipe]) }}"
+                           class="text-xs text-gray-600 hover:underline">Editar</a>
+                        <form action="{{ route('campeonatos.equipes.destroy', [$campeonato, $equipe]) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Excluir equipe {{ $equipe->nome }}?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-xs text-red-600 hover:underline">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="px-6 py-6 text-center text-gray-500 text-sm">Nenhuma equipe cadastrada</div>
+        @endforelse
+    </div>
+
+    {{-- Premiações --}}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50">
+            <h2 class="text-lg font-bold text-gray-800">Premiações Especiais</h2>
+        </div>
+
+        {{-- Formulário de registro --}}
+        <div class="px-6 py-4 border-b"
+             x-data="{ escopo: '{{ old('escopo', 'individual') }}' }">
+            <form action="{{ route('campeonatos.premiacoes.store', $campeonato) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Destinatário</label>
+                        <select name="escopo" x-model="escopo" class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm">
+                            <option value="individual">Atleta Individual</option>
+                            <option value="equipe">Equipe (todos os atletas)</option>
+                        </select>
+                    </div>
+                    <div x-show="escopo === 'individual'">
+                        <label class="block text-sm text-gray-600 mb-1">Atleta</label>
+                        @php
+                            $atletasDoCampeonato = $campeonato->inscricoes()
+                                ->with('atleta')
+                                ->get()
+                                ->pluck('atleta')
+                                ->unique('id')
+                                ->sortBy('nome');
+                        @endphp
+                        <select name="atleta_id" class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm">
+                            <option value="">Selecione</option>
+                            @foreach($atletasDoCampeonato as $a)
+                                <option value="{{ $a->id }}" {{ old('atleta_id') == $a->id ? 'selected' : '' }}>{{ $a->nome }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Tipo de Troféu</label>
+                        <select name="tipo" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm">
+                            @foreach(\App\Models\Premiacao::TIPOS as $tipo)
+                                <option value="{{ $tipo }}" {{ old('tipo') == $tipo ? 'selected' : '' }}>{{ $tipo }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Observação <span class="text-gray-400">(opcional)</span></label>
+                        <input type="text" name="observacao" value="{{ old('observacao') }}" maxlength="255"
+                               class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm" placeholder="Ex: 1º lugar geral">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="bg-yellow-500 text-white py-1.5 px-5 rounded-md hover:bg-yellow-600 font-semibold text-sm transition">
+                        Registrar Premiação
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Lista --}}
+        @php $premiacoes = $campeonato->premiacoes()->with('atleta')->orderBy('tipo')->orderBy('atleta_id')->get(); @endphp
+        @forelse($premiacoes as $prem)
+            <div class="px-6 py-3 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg">🏆</span>
+                    <div>
+                        <span class="font-semibold text-gray-800 text-sm">{{ $prem->tipo }}</span>
+                        <span class="mx-2 text-gray-300">·</span>
+                        @if($prem->isEquipe())
+                            <span class="text-sm text-purple-700 font-medium">Equipe</span>
+                        @else
+                            <span class="text-sm text-gray-700">{{ $prem->atleta->nome }}</span>
+                        @endif
+                        @if($prem->observacao)
+                            <span class="ml-2 text-xs text-gray-400">— {{ $prem->observacao }}</span>
+                        @endif
+                    </div>
+                </div>
+                <form action="{{ route('campeonatos.premiacoes.destroy', [$campeonato, $prem]) }}" method="POST" class="inline"
+                      onsubmit="return confirm('Remover esta premiação?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">Remover</button>
+                </form>
+            </div>
+        @empty
+            <div class="px-6 py-5 text-center text-gray-500 text-sm">Nenhuma premiação registrada</div>
+        @endforelse
+    </div>
+
     {{-- Zona de perigo --}}
     <div class="bg-red-50 border border-red-200 rounded-lg p-6">
         <h2 class="text-lg font-bold text-red-700 mb-2">Zona de perigo</h2>

@@ -9,11 +9,12 @@ class Resultado extends Model
 {
     protected $fillable = [
         'atleta_id', 'prova_id', 'distancia_id', 'campeonato_id',
-        'piscina', 'tempo', 'colocacao', 'medalha',
+        'piscina', 'tempo', 'rco', 'colocacao', 'medalha',
         'status_lancamento', 'data_lancamento',
     ];
 
     protected $casts = [
+        'rco'             => 'boolean',
         'data_lancamento' => 'datetime',
     ];
 

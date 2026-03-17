@@ -115,6 +115,9 @@
                                 {{-- Modo leitura: valores fixos + botão editar --}}
                                 <span class="w-24 text-sm text-center font-mono text-gray-700 bg-gray-50 border rounded px-2 py-1">{{ $this->tempos[$key] }}</span>
                                 <span class="w-16 text-sm text-center text-gray-700 bg-gray-50 border rounded px-2 py-1">{{ $this->colocacoes[$key] }}º</span>
+                                @if($this->rcos[$key] ?? false)
+                                    <span class="text-xs font-bold text-orange-600 bg-orange-100 border border-orange-300 rounded px-1.5 py-0.5">RCO</span>
+                                @endif
                                 <button
                                     wire:click="habilitarEdicao({{ $key }})"
                                     class="text-xs text-blue-600 hover:text-blue-800 hover:underline px-1"
@@ -145,6 +148,15 @@
                                     class="campo-coloc w-16 text-sm text-center border rounded px-2 py-1 {{ $bloqueado ? 'bg-gray-100 cursor-not-allowed' : 'focus:ring-blue-500 focus:border-blue-500' }}"
                                     {{ $bloqueado ? 'disabled' : '' }}
                                 >
+                                <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer select-none {{ $bloqueado ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                    <input
+                                        type="checkbox"
+                                        wire:model.live="rcos.{{ $key }}"
+                                        class="rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                                        {{ $bloqueado ? 'disabled' : '' }}
+                                    >
+                                    RCO
+                                </label>
                             @endif
 
                             {{-- Feedback --}}
@@ -169,6 +181,130 @@
             @endif
         </div>
     @endforelse
+
+    {{-- Revezamentos --}}
+    @if($equipes->count() > 0)
+        <div class="mt-4 mb-2">
+            <h2 class="text-base font-bold text-gray-700 px-1">Revezamentos</h2>
+        </div>
+
+        @foreach($equipes as $equipe)
+            @php
+                $statusColor = match($equipe->status) {
+                    'Pendente'     => 'bg-gray-100 border-gray-300 text-gray-600',
+                    'Em andamento' => 'bg-blue-50 border-blue-400 text-blue-700',
+                    'Finalizada'   => 'bg-green-50 border-green-400 text-green-700',
+                    default        => 'bg-gray-100 border-gray-300',
+                };
+                $statusBadge = match($equipe->status) {
+                    'Pendente'     => 'bg-gray-200 text-gray-700',
+                    'Em andamento' => 'bg-blue-200 text-blue-800',
+                    'Finalizada'   => 'bg-green-200 text-green-800',
+                    default        => 'bg-gray-200 text-gray-700',
+                };
+                $modalidadeBadge = match($equipe->modalidade) {
+                    'Misto'    => 'bg-purple-100 text-purple-700',
+                    'Feminino' => 'bg-pink-100 text-pink-700',
+                    default    => 'bg-blue-100 text-blue-700',
+                };
+                $ordem = $equipe->ordem_execucao ? str_pad($equipe->ordem_execucao, 2, '0', STR_PAD_LEFT) : '--';
+                $eqFeedback = $this->feedbacksEquipes[$equipe->id] ?? null;
+                $eqConfirmado = $equipe->status_lancamento === 'Confirmado';
+                $eqBloqueado  = $eqConfirmado || $equipe->status === 'Pendente';
+                $eqLancado    = !empty($this->temposEquipes[$equipe->id]) && !empty($this->colocacoesEquipes[$equipe->id]);
+                $eqEditando   = isset($this->editandoEquipes[$equipe->id]);
+                $medalhaIcon  = match($equipe->medalha ?? '') {
+                    'Ouro'   => '🥇',
+                    'Prata'  => '🥈',
+                    'Bronze' => '🥉',
+                    default  => '',
+                };
+            @endphp
+
+            <div class="mb-3 rounded-lg shadow border-l-4 {{ $statusColor }}">
+                {{-- Header --}}
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 bg-white rounded-t-lg">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm font-mono text-gray-400">[{{ $ordem }}]</span>
+                        <span class="font-bold text-gray-800">{{ $medalhaIcon }} {{ $equipe->nome }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold {{ $modalidadeBadge }}">{{ $equipe->modalidade }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $equipe->tipo }} · 4×{{ $equipe->distancia->metragem }}</span>
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $statusBadge }}">{{ $equipe->status }}</span>
+                    </div>
+                    <div class="flex gap-2 mt-2 sm:mt-0">
+                        @if($equipe->status === 'Pendente')
+                            <button wire:click="iniciarEquipe({{ $equipe->id }})"
+                                    class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition">
+                                Iniciar
+                            </button>
+                        @elseif($equipe->status === 'Em andamento' && $equipe->status_lancamento === 'Lançado')
+                            <button wire:click="confirmarEquipe({{ $equipe->id }})"
+                                    class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition"
+                                    onclick="return confirm('Confirmar resultado desta equipe?')">
+                                Confirmar
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Atletas --}}
+                <div class="px-4 py-2 bg-white border-t border-gray-100">
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-2">
+                        @foreach($equipe->membros as $membro)
+                            <span>
+                                <span class="text-gray-400">{{ $membro->posicao }}.</span>
+                                {{ $membro->atleta->nome }}
+                                @if($equipe->tipo === 'Medley')
+                                    <span class="text-xs text-blue-500">({{ \App\Models\Equipe::MEDLEY_ESTILOS[$membro->posicao] }})</span>
+                                @endif
+                            </span>
+                        @endforeach
+                    </div>
+
+                    {{-- Inputs de resultado --}}
+                    <div class="flex items-center gap-2 {{ $eqConfirmado ? 'opacity-70' : '' }}">
+                        @if($eqLancado && !$eqEditando && !$eqBloqueado)
+                            <span class="w-24 text-sm text-center font-mono text-gray-700 bg-gray-50 border rounded px-2 py-1">{{ $this->temposEquipes[$equipe->id] }}</span>
+                            <span class="w-16 text-sm text-center text-gray-700 bg-gray-50 border rounded px-2 py-1">{{ $this->colocacoesEquipes[$equipe->id] }}º</span>
+                            @if($this->rcosEquipes[$equipe->id] ?? false)
+                                <span class="text-xs font-bold text-orange-600 bg-orange-100 border border-orange-300 rounded px-1.5 py-0.5">RCO</span>
+                            @endif
+                            <button wire:click="habilitarEdicaoEquipe({{ $equipe->id }})"
+                                    class="text-xs text-blue-600 hover:text-blue-800 hover:underline px-1">Editar</button>
+                        @else
+                            <input type="tel"
+                                   wire:model.blur="temposEquipes.{{ $equipe->id }}"
+                                   oninput="mascaraTempoInput(this)"
+                                   placeholder="__:__.__" maxlength="8" pattern="[0-9]*"
+                                   class="w-24 text-sm text-center border rounded px-2 py-1 font-mono {{ $eqBloqueado ? 'bg-gray-100 cursor-not-allowed' : 'focus:ring-blue-500 focus:border-blue-500' }}"
+                                   {{ $eqBloqueado ? 'disabled' : '' }}>
+                            <input type="tel"
+                                   wire:model.blur="colocacoesEquipes.{{ $equipe->id }}"
+                                   oninput="this.value=this.value.replace(/\D/g,'').substring(0,2)"
+                                   placeholder="#" maxlength="2" pattern="[0-9]*"
+                                   class="w-16 text-sm text-center border rounded px-2 py-1 {{ $eqBloqueado ? 'bg-gray-100 cursor-not-allowed' : 'focus:ring-blue-500 focus:border-blue-500' }}"
+                                   {{ $eqBloqueado ? 'disabled' : '' }}>
+                            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer select-none {{ $eqBloqueado ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                <input type="checkbox"
+                                       wire:model.live="rcosEquipes.{{ $equipe->id }}"
+                                       class="rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                                       {{ $eqBloqueado ? 'disabled' : '' }}>
+                                RCO
+                            </label>
+                        @endif
+
+                        <span class="w-6 text-center">
+                            @if($eqFeedback === 'salvo')
+                                <span class="text-green-500" title="Salvo">&#10004;</span>
+                            @elseif($eqFeedback && str_starts_with($eqFeedback, 'erro:'))
+                                <span class="text-red-500 cursor-help" title="{{ substr($eqFeedback, 5) }}">&#9888;</span>
+                            @endif
+                        </span>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
 </div>
 
 <script>

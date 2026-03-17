@@ -23,4 +23,14 @@ class Campeonato extends Model
     {
         return $this->hasMany(Resultado::class);
     }
+
+    public function equipes(): HasMany
+    {
+        return $this->hasMany(\App\Models\Equipe::class);
+    }
+
+    public function premiacoes(): HasMany
+    {
+        return $this->hasMany(\App\Models\Premiacao::class);
+    }
 }

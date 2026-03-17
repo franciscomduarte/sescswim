@@ -14,15 +14,31 @@
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-4">
                     <a href="/" class="text-xl font-bold">Natação SESC</a>
-                    <div class="hidden md:flex space-x-4">
+                    <div class="hidden md:flex space-x-4 items-center">
                         @auth
                             <a href="{{ route('painel.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Painel</a>
                             <a href="{{ route('importacao.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Importação</a>
                         @endauth
                         <a href="{{ route('resultados.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Resultados</a>
                         <a href="{{ route('indices.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Índices</a>
+                        <a href="{{ route('brasileiro.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Brasileiro</a>
+                        <a href="{{ route('premiacoes.relatorio') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Premiações</a>
                         @auth
-                            <a href="{{ route('campeonatos.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Campeonatos</a>
+                            <div x-data="{ open: false }" class="relative">
+                                <button @click="open = !open" @click.outside="open = false"
+                                        class="flex items-center gap-1 hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                                    Cadastros Básicos
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="open" x-transition
+                                     class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                    <a href="{{ route('campeonatos.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Campeonatos</a>
+                                    <a href="{{ route('atletas.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Atletas</a>
+                                    <a href="{{ route('provas.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Provas</a>
+                                </div>
+                            </div>
                         @endauth
                     </div>
                 </div>
@@ -53,8 +69,22 @@
             @endauth
             <a href="{{ route('resultados.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Resultados</a>
             <a href="{{ route('indices.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Índices</a>
+            <a href="{{ route('premiacoes.relatorio') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Premiações</a>
             @auth
-                <a href="{{ route('campeonatos.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Campeonatos</a>
+                <div x-data="{ open: false }">
+                    <button @click="open = !open"
+                            class="flex items-center justify-between w-full hover:bg-blue-600 px-3 py-2 rounded-md text-sm">
+                        Cadastros Básicos
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" class="pl-4 space-y-1">
+                        <a href="{{ route('campeonatos.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Campeonatos</a>
+                        <a href="{{ route('atletas.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Atletas</a>
+                        <a href="{{ route('provas.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Provas</a>
+                    </div>
+                </div>
             @endauth
             <div class="border-t border-blue-600 mt-2 pt-2">
                 @auth
