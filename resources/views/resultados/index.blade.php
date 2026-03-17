@@ -336,12 +336,13 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($resultadosCompeticao as $r)
+                        @php $revC = $relayMedalsPorCampeonato[$r->campeonato_id] ?? ['ouro' => 0, 'prata' => 0, 'bronze' => 0]; @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-3 text-sm font-medium text-gray-800">{{ $r->campeonato->nome }}</td>
                             <td class="px-6 py-3 text-sm text-center text-gray-500">{{ $r->total }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-yellow-600">{{ $r->ouro ?: '-' }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-gray-400">{{ $r->prata ?: '-' }}</td>
-                            <td class="px-6 py-3 text-sm text-center font-bold text-orange-500">{{ $r->bronze ?: '-' }}</td>
+                            <td class="px-6 py-3 text-sm text-center font-bold text-yellow-600">{{ ($r->ouro + $revC['ouro']) ?: '-' }}</td>
+                            <td class="px-6 py-3 text-sm text-center font-bold text-gray-400">{{ ($r->prata + $revC['prata']) ?: '-' }}</td>
+                            <td class="px-6 py-3 text-sm text-center font-bold text-orange-500">{{ ($r->bronze + $revC['bronze']) ?: '-' }}</td>
                         </tr>
                     @empty
                         <tr>

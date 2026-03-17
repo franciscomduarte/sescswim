@@ -46,18 +46,25 @@ class ResultadosController extends Controller
             'bronze' => $equipesComMedalha->where('medalha', 'Bronze')->sum(fn($e) => $e->membros->count()),
         ];
 
-        // Relay medals per athlete (for desempenho table) and per piscina (for comparison section)
+        // Relay medals per athlete, per piscina and per campeonato
         $relayMedalsPorAtleta = [];
         $relayMedalsPorPiscina = [];
+        $relayMedalsPorCampeonato = [];
         foreach ($equipesComMedalha as $equipe) {
             $key = strtolower($equipe->medalha); // 'ouro', 'prata', 'bronze'
             $membrosCount = $equipe->membros->count();
             $piscina = $equipe->campeonato->piscina;
+            $campId  = $equipe->campeonato_id;
 
             if (!isset($relayMedalsPorPiscina[$piscina])) {
                 $relayMedalsPorPiscina[$piscina] = ['ouro' => 0, 'prata' => 0, 'bronze' => 0];
             }
             $relayMedalsPorPiscina[$piscina][$key] += $membrosCount;
+
+            if (!isset($relayMedalsPorCampeonato[$campId])) {
+                $relayMedalsPorCampeonato[$campId] = ['ouro' => 0, 'prata' => 0, 'bronze' => 0];
+            }
+            $relayMedalsPorCampeonato[$campId][$key] += $membrosCount;
 
             foreach ($equipe->membros as $membro) {
                 $id = $membro->atleta_id;
@@ -160,7 +167,7 @@ class ResultadosController extends Controller
 
         return view('resultados.index', compact(
             'campeonatos', 'atletas', 'filtros', 'medalhas', 'medalhasRevezamento', 'totalRcos',
-            'desempenhoAtletas', 'relayMedalsPorAtleta', 'relayMedalsPorPiscina',
+            'desempenhoAtletas', 'relayMedalsPorAtleta', 'relayMedalsPorPiscina', 'relayMedalsPorCampeonato',
             'resultadosCompeticao', 'comparacaoPiscina',
             'revezamentos', 'recordesIndividuais', 'recordesRevezamento', 'premiacoes'
         ));
