@@ -172,7 +172,7 @@
                                     {{ $equipe->colocacao }}º
                                 </span>
                                 <span class="font-medium text-gray-800 ml-2">{{ $equipe->nome }}</span>
-                                <span class="ml-2 text-xs text-gray-500">{{ $equipe->modalidade }} · {{ $equipe->tipo }} · {{ $equipe->distancia?->metros ?? '' }}m×4</span>
+                                <span class="ml-2 text-xs text-gray-500">{{ $equipe->modalidade }} · {{ $equipe->tipo }} · {{ $equipe->distancia?->metragem ?? '' }}m×4</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 @if($equipe->tempo)
@@ -230,7 +230,7 @@
                                 <span class="font-medium text-gray-800">{{ $r->atleta->nome }}</span>
                                 <span class="text-gray-500">{{ $r->prova?->nome }}</span>
                                 @if($r->distancia)
-                                    <span class="text-gray-400">{{ $r->distancia->metros }}m</span>
+                                    <span class="text-gray-400">{{ $r->distancia->metragem }}</span>
                                 @endif
                                 @if($r->tempo)
                                     <span class="font-mono text-purple-700 font-semibold">{{ $r->tempo }}</span>
@@ -258,7 +258,7 @@
                                 <span class="font-medium text-gray-800">{{ $equipe->nome }}</span>
                                 <span class="text-gray-500">{{ $equipe->modalidade }} · {{ $equipe->tipo }}</span>
                                 @if($equipe->distancia)
-                                    <span class="text-gray-400">{{ $equipe->distancia->metros }}m×4</span>
+                                    <span class="text-gray-400">{{ $equipe->distancia->metragem }}m×4</span>
                                 @endif
                                 @if($equipe->tempo)
                                     <span class="font-mono text-purple-700 font-semibold">{{ $equipe->tempo }}</span>
