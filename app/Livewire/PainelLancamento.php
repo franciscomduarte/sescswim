@@ -2,9 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Models\Atleta;
 use App\Models\Campeonato;
+use App\Models\Distancia;
 use App\Models\Equipe;
 use App\Models\Inscricao;
+use App\Models\Prova;
 use App\Models\Resultado;
 use Livewire\Component;
 
@@ -21,6 +24,15 @@ class PainelLancamento extends Component
     public array $rcos = [];
     public array $feedbacks = [];
     public array $editando = [];
+
+    // Formulário de novo atleta — armazena a chave "provaId-distanciaId" do grupo aberto, ou ''
+    public string $mostrarFormAtleta = '';
+    public string $novoAtletaId      = '';
+    public string $novaProvaId       = '';
+    public string $novaDistanciaId   = '';
+    public string $novoTempo         = '';
+    public string $novaColocacao     = '';
+    public string $erroNovoAtleta    = '';
 
     // Revezamentos
     public array $temposEquipes = [];
@@ -87,8 +99,20 @@ class PainelLancamento extends Component
         $inscricao = Inscricao::with(['atleta', 'prova', 'distancia'])->findOrFail($inscricaoId);
 
         if ($inscricao->status === 'Pendente') {
-            $this->feedbacks[$inscricaoId] = 'erro:Prova ainda não iniciada';
-            return;
+            // Verifica se outros atletas da mesma prova já foram iniciados
+            $grupoIniciado = Inscricao::where([
+                'campeonato_id' => $this->campeonato->id,
+                'prova_id'      => $inscricao->prova_id,
+                'distancia_id'  => $inscricao->distancia_id,
+            ])->whereIn('status', ['Em andamento', 'Finalizada'])->exists();
+
+            if ($grupoIniciado) {
+                // Promove automaticamente a inscrição para acompanhar o grupo
+                $inscricao->update(['status' => 'Em andamento']);
+            } else {
+                $this->feedbacks[$inscricaoId] = 'erro:Prova ainda não iniciada';
+                return;
+            }
         }
 
         $tempo    = $this->tempos[$inscricaoId] ?? '';
@@ -140,6 +164,99 @@ class PainelLancamento extends Component
         unset($this->editando[$inscricaoId]);
 
         $this->verificarProvaFinalizada($inscricao);
+    }
+
+    public function abrirFormAtleta(string $chaveProva)
+    {
+        [$provaId, $distanciaId] = explode('-', $chaveProva);
+
+        // Fecha qualquer form já aberto e limpa campos
+        $this->mostrarFormAtleta = $chaveProva;
+        $this->novoAtletaId      = '';
+        $this->novaProvaId       = $provaId;
+        $this->novaDistanciaId   = $distanciaId;
+        $this->novoTempo         = '';
+        $this->novaColocacao     = '';
+        $this->erroNovoAtleta    = '';
+    }
+
+    public function adicionarAtleta()
+    {
+        $this->erroNovoAtleta = '';
+
+        if (!$this->novoAtletaId || !$this->novaProvaId || !$this->novaDistanciaId) {
+            $this->erroNovoAtleta = 'Atleta, prova e distância são obrigatórios.';
+            return;
+        }
+
+        if (!empty($this->novoTempo) && !preg_match('/^\d{2}:\d{2}\.\d{2}$/', $this->novoTempo)) {
+            $this->erroNovoAtleta = 'Tempo inválido. Use o formato mm:ss.ms (ex: 00:28.47)';
+            return;
+        }
+
+        if (!empty($this->novaColocacao) && (!is_numeric($this->novaColocacao) || $this->novaColocacao < 1)) {
+            $this->erroNovoAtleta = 'Colocação deve ser um número positivo.';
+            return;
+        }
+
+        $chave = [
+            'campeonato_id' => $this->campeonato->id,
+            'atleta_id'     => $this->novoAtletaId,
+            'prova_id'      => $this->novaProvaId,
+            'distancia_id'  => $this->novaDistanciaId,
+        ];
+
+        if (Inscricao::where($chave)->exists()) {
+            $this->erroNovoAtleta = 'Este atleta já está inscrito nessa prova/distância.';
+            return;
+        }
+
+        $temDados = !empty($this->novoTempo) || !empty($this->novaColocacao);
+
+        // Herda o status do grupo da prova (pode já estar Em andamento ou Finalizada)
+        $statusGrupo = Inscricao::where([
+            'campeonato_id' => $this->campeonato->id,
+            'prova_id'      => $this->novaProvaId,
+            'distancia_id'  => $this->novaDistanciaId,
+        ])->whereIn('status', ['Em andamento', 'Finalizada'])->value('status');
+
+        $statusInscricao = $statusGrupo ?? ($temDados ? 'Em andamento' : 'Pendente');
+        $ordemMax        = Inscricao::where('campeonato_id', $this->campeonato->id)->max('ordem_execucao') ?? 0;
+
+        $inscricao = Inscricao::create(array_merge($chave, [
+            'ordem_execucao' => $ordemMax + 1,
+            'status'         => $statusInscricao,
+        ]));
+
+        $colocacaoInt = (int) $this->novaColocacao;
+        $medalha      = match ($colocacaoInt) {
+            1 => 'Ouro', 2 => 'Prata', 3 => 'Bronze', default => 'Nenhuma',
+        };
+
+        Resultado::create(array_merge($chave, [
+            'piscina'           => $this->campeonato->piscina,
+            'tempo'             => $this->novoTempo ?: null,
+            'colocacao'         => $colocacaoInt ?: null,
+            'medalha'           => $colocacaoInt ? $medalha : 'Nenhuma',
+            'rco'               => false,
+            'status_lancamento' => $temDados ? 'Lançado' : 'Pendente',
+            'data_lancamento'   => $temDados ? now() : null,
+        ]));
+
+        // Registra no estado reativo do componente
+        $key                    = $inscricao->id;
+        $this->tempos[$key]     = $this->novoTempo;
+        $this->colocacoes[$key] = $this->novaColocacao;
+        $this->rcos[$key]       = false;
+        $this->feedbacks[$key]  = $temDados ? 'salvo' : '';
+
+        // Fecha o formulário
+        $this->novoAtletaId      = '';
+        $this->novaProvaId       = '';
+        $this->novaDistanciaId   = '';
+        $this->novoTempo         = '';
+        $this->novaColocacao     = '';
+        $this->mostrarFormAtleta = '';
     }
 
     public function iniciarProva(string $chaveProva)
@@ -314,6 +431,9 @@ class PainelLancamento extends Component
         return view('livewire.painel-lancamento', [
             'provasAgrupadas' => $this->getProvasAgrupadas(),
             'equipes'         => $this->getEquipes(),
+            'atletas'         => Atleta::orderBy('nome')->get(),
+            'provas'          => Prova::orderBy('nome')->get(),
+            'distancias'      => Distancia::orderBy('metragem')->get(),
         ]);
     }
 }

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atleta;
 use App\Models\Campeonato;
+use App\Models\Distancia;
 use App\Models\Inscricao;
+use App\Models\Prova;
 use App\Models\Resultado;
 use Illuminate\Http\Request;
 
@@ -58,7 +61,11 @@ class CampeonatoController extends Controller
             'bronze' => Resultado::where('campeonato_id', $campeonato->id)->where('medalha', 'Bronze')->count(),
         ];
 
-        return view('campeonatos.edit', compact('campeonato', 'inscricoes', 'resultados', 'totais'));
+        $atletas   = Atleta::orderBy('nome')->get();
+        $provas    = Prova::orderBy('nome')->get();
+        $distancias = Distancia::orderBy('metragem')->get();
+
+        return view('campeonatos.edit', compact('campeonato', 'inscricoes', 'resultados', 'totais', 'atletas', 'provas', 'distancias'));
     }
 
     public function update(Request $request, Campeonato $campeonato)
@@ -79,6 +86,42 @@ class CampeonatoController extends Controller
     {
         $campeonato->delete();
         return redirect()->route('campeonatos.index')->with('success', 'Campeonato excluído!');
+    }
+
+    public function adicionarInscricao(Request $request, Campeonato $campeonato)
+    {
+        $request->validate([
+            'atleta_id'    => 'required|exists:atletas,id',
+            'prova_id'     => 'required|exists:provas,id',
+            'distancia_id' => 'required|exists:distancias,id',
+        ]);
+
+        $chave = [
+            'campeonato_id' => $campeonato->id,
+            'atleta_id'     => $request->atleta_id,
+            'prova_id'      => $request->prova_id,
+            'distancia_id'  => $request->distancia_id,
+        ];
+
+        if (Inscricao::where($chave)->exists()) {
+            return redirect()->route('campeonatos.edit', $campeonato)
+                ->with('error', 'Este atleta já está inscrito nessa prova/distância.');
+        }
+
+        $ordemMax = Inscricao::where('campeonato_id', $campeonato->id)->max('ordem_execucao') ?? 0;
+
+        Inscricao::create(array_merge($chave, [
+            'ordem_execucao' => $ordemMax + 1,
+            'status'         => 'Pendente',
+        ]));
+
+        Resultado::firstOrCreate($chave, [
+            'piscina'           => $campeonato->piscina,
+            'status_lancamento' => 'Pendente',
+        ]);
+
+        return redirect()->route('campeonatos.edit', $campeonato)
+            ->with('success', 'Atleta inscrito com sucesso!');
     }
 
     public function removerInscricao(Campeonato $campeonato, Inscricao $inscricao)

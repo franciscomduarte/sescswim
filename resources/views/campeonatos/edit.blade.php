@@ -92,10 +92,74 @@
     </div>
 
     {{-- Inscrições por Prova --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ aberto: {{ $errors->hasAny(['atleta_id','prova_id','distancia_id']) || session('error') ? 'true' : 'false' }} }">
         <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
             <h2 class="text-lg font-bold text-gray-800">Inscrições por Prova</h2>
-            <span class="text-sm text-gray-500">{{ $totais['inscricoes'] }} inscrições</span>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500">{{ $totais['inscricoes'] }} inscrições</span>
+                <button @click="aberto = !aberto"
+                        class="bg-blue-600 text-white text-sm py-1.5 px-4 rounded-md hover:bg-blue-700 font-semibold transition flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Inscrever Atleta
+                </button>
+            </div>
+        </div>
+
+        {{-- Formulário de nova inscrição --}}
+        <div x-show="aberto" x-cloak x-transition class="px-6 py-4 bg-blue-50 border-b border-blue-100">
+            <form action="{{ route('campeonatos.adicionar-inscricao', $campeonato) }}" method="POST">
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Atleta</label>
+                        <select name="atleta_id" required
+                                class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm bg-white">
+                            <option value="">Selecione o atleta…</option>
+                            @foreach($atletas as $atleta)
+                                <option value="{{ $atleta->id }}" {{ old('atleta_id') == $atleta->id ? 'selected' : '' }}>
+                                    {{ $atleta->nome }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Prova</label>
+                        <select name="prova_id" required
+                                class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm bg-white">
+                            <option value="">Selecione a prova…</option>
+                            @foreach($provas as $prova)
+                                <option value="{{ $prova->id }}" {{ old('prova_id') == $prova->id ? 'selected' : '' }}>
+                                    {{ $prova->nome }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Distância</label>
+                        <select name="distancia_id" required
+                                class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm bg-white">
+                            <option value="">Selecione a distância…</option>
+                            @foreach($distancias as $distancia)
+                                <option value="{{ $distancia->id }}" {{ old('distancia_id') == $distancia->id ? 'selected' : '' }}>
+                                    {{ $distancia->metragem }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button type="submit"
+                            class="bg-blue-600 text-white py-1.5 px-5 rounded-md hover:bg-blue-700 font-semibold text-sm transition">
+                        Confirmar Inscrição
+                    </button>
+                    <button type="button" @click="aberto = false"
+                            class="bg-gray-200 text-gray-700 py-1.5 px-4 rounded-md hover:bg-gray-300 text-sm transition">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
 
         @forelse($inscricoes as $nomeProva => $atletasProva)

@@ -3,7 +3,7 @@
 @section('title', 'Atletas')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<div class="w-full">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Atletas</h1>
     </div>
@@ -45,32 +45,33 @@
         @endif
     </form>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód. Federação</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sexo</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inscrições</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resultados</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód. Federação</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sexo</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inscrições</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resultados</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($atletas as $atleta)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium">
+                        <td class="px-4 py-3 whitespace-nowrap font-medium">
                             <a href="{{ route('atletas.edit', $atleta) }}" class="text-blue-700 hover:underline">{{ $atleta->nome }}</a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {{ $atleta->data_nascimento ? $atleta->data_nascimento->format('d/m/Y') : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {{ $atleta->codigo_federacao ?? '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
                             @if($atleta->sexo)
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $atleta->sexo == 'feminino' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800' }}">
                                     {{ ucfirst($atleta->sexo) }}
@@ -79,9 +80,38 @@
                                 <span class="text-gray-400">-</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $atleta->inscricoes_count }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $atleta->resultados_count }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        @php
+                            $cat = $atleta->categoria();
+                            $catCor = match($cat) {
+                                'MINIMIRIM' => 'bg-yellow-100 text-yellow-800',
+                                'PREMIRIM'  => 'bg-amber-100 text-amber-800',
+                                'MIR1'      => 'bg-lime-100 text-lime-800',
+                                'MIR2'      => 'bg-green-100 text-green-800',
+                                'PET1'      => 'bg-teal-100 text-teal-800',
+                                'PET2'      => 'bg-cyan-100 text-cyan-800',
+                                'INF1'      => 'bg-sky-100 text-sky-800',
+                                'INF2'      => 'bg-blue-100 text-blue-800',
+                                'JUV1'      => 'bg-violet-100 text-violet-800',
+                                'JUV2'      => 'bg-purple-100 text-purple-800',
+                                'JR1'       => 'bg-pink-100 text-pink-800',
+                                'JR2'       => 'bg-rose-100 text-rose-800',
+                                'Senior'    => 'bg-orange-100 text-orange-800',
+                                default     => 'bg-gray-100 text-gray-600',
+                            };
+                        @endphp
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                            @if($atleta->data_nascimento)
+                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $catCor }}"
+                                      title="{{ $cat }}">
+                                    {{ \App\Services\CategoriaEsportiva::rotulo($cat) }}
+                                </span>
+                            @else
+                                <span class="text-gray-400 text-xs">—</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $atleta->inscricoes_count }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">{{ $atleta->resultados_count }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm space-x-2">
                             <a href="{{ route('atletas.edit', $atleta) }}" class="text-gray-600 hover:underline">Editar</a>
                             <form action="{{ route('atletas.destroy', $atleta) }}" method="POST" class="inline" onsubmit="return confirm('Excluir atleta e todos os dados relacionados?')">
                                 @csrf
@@ -92,7 +122,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhum atleta cadastrado</td>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-500">Nenhum atleta cadastrado</td>
                     </tr>
                 @endforelse
             </tbody>

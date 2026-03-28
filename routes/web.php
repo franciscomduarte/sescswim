@@ -9,6 +9,7 @@ use App\Http\Controllers\PremiacaoController;
 use App\Http\Controllers\IndicesController;
 use App\Http\Controllers\ProvaController;
 use App\Http\Controllers\RelatorioBrasileiroController;
+use App\Http\Controllers\PainelPublicoController;
 use App\Http\Controllers\ResultadosController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rotas públicas
+Route::get('/placar', [PainelPublicoController::class, 'index'])->name('placar.index');
 Route::get('/resultados', [ResultadosController::class, 'index'])->name('resultados.index');
 Route::get('/indices', [IndicesController::class, 'index'])->name('indices.index');
 Route::get('/classificados-brasileiro', [RelatorioBrasileiroController::class, 'index'])->name('brasileiro.index');
@@ -50,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/campeonatos/{campeonato}/editar', [CampeonatoController::class, 'edit'])->name('campeonatos.edit');
     Route::put('/campeonatos/{campeonato}', [CampeonatoController::class, 'update'])->name('campeonatos.update');
     Route::delete('/campeonatos/{campeonato}', [CampeonatoController::class, 'destroy'])->name('campeonatos.destroy');
+    Route::post('/campeonatos/{campeonato}/inscricoes', [CampeonatoController::class, 'adicionarInscricao'])->name('campeonatos.adicionar-inscricao');
     Route::delete('/campeonatos/{campeonato}/inscricao/{inscricao}', [CampeonatoController::class, 'removerInscricao'])->name('campeonatos.remover-inscricao');
     Route::delete('/campeonatos/{campeonato}/resultado/{resultado}', [CampeonatoController::class, 'removerResultado'])->name('campeonatos.remover-resultado');
     Route::put('/campeonatos/{campeonato}/resultado/{resultado}', [CampeonatoController::class, 'atualizarResultado'])->name('campeonatos.atualizar-resultado');

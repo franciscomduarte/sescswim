@@ -50,6 +50,7 @@ class ImportacaoJsonService
                 }
 
                 $nomeAtleta = trim($registro['atleta']);
+                $codigoFederacao = isset($registro['registro']) && $registro['registro'] !== null ? trim((string) $registro['registro']) : null;
                 $nomeProva = trim($registro['prova']);
                 $metragem = trim($registro['distancia']);
                 $tempo = isset($registro['tempo']) && $registro['tempo'] !== null ? trim((string) $registro['tempo']) : null;
@@ -60,7 +61,14 @@ class ImportacaoJsonService
                     $medalha = $colocacao !== null ? $this->calcularMedalha($colocacao) : 'Nenhuma';
                 }
 
-                $atleta = Atleta::firstOrCreate(['nome' => $nomeAtleta]);
+                if ($codigoFederacao) {
+                    $atleta = Atleta::firstOrCreate(
+                        ['codigo_federacao' => $codigoFederacao],
+                        ['nome' => $nomeAtleta]
+                    );
+                } else {
+                    $atleta = Atleta::firstOrCreate(['nome' => $nomeAtleta]);
+                }
                 $prova = Prova::firstOrCreate(['nome' => $nomeProva]);
                 $distancia = Distancia::firstOrCreate(['metragem' => $metragem]);
 

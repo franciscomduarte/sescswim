@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CategoriaEsportiva;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -14,6 +15,11 @@ class Atleta extends Model
         return [
             'data_nascimento' => 'date',
         ];
+    }
+
+    public function categoria(): string
+    {
+        return CategoriaEsportiva::calcular($this->data_nascimento);
     }
 
     public function inscricoes(): HasMany

@@ -62,8 +62,81 @@
                             Confirmar Prova
                         </button>
                     @endif
+                    <button wire:click="abrirFormAtleta('{{ $chaveProva }}')"
+                            class="text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded transition flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Atleta
+                    </button>
                 </div>
             </div>
+
+            {{-- Formulário de adicionar atleta nesta prova --}}
+            @if($mostrarFormAtleta === $chaveProva)
+                <div class="px-4 py-3 bg-emerald-50 border-t border-emerald-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wide">
+                            Adicionar atleta — {{ $primeiraInscricao->distancia->metragem }} {{ $primeiraInscricao->prova->nome }}
+                        </p>
+                        <button wire:click="$set('mostrarFormAtleta', '')" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    @if($erroNovoAtleta)
+                        <div class="mb-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded px-3 py-2">
+                            {{ $erroNovoAtleta }}
+                        </div>
+                    @endif
+
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div class="flex-1 min-w-48">
+                            <label class="block text-xs text-gray-500 mb-1">Atleta <span class="text-red-500">*</span></label>
+                            <select wire:model="novoAtletaId"
+                                    class="w-full border-gray-300 rounded text-sm p-1.5 border bg-white focus:ring-2 focus:ring-emerald-500">
+                                <option value="">Selecione o atleta…</option>
+                                @foreach($atletas as $a)
+                                    <option value="{{ $a->id }}">{{ $a->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Tempo</label>
+                            <input type="tel"
+                                   wire:model="novoTempo"
+                                   oninput="mascaraTempoInput(this)"
+                                   placeholder="00:00.00"
+                                   maxlength="8"
+                                   class="w-28 border-gray-300 rounded text-sm p-1.5 border font-mono focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Colocação</label>
+                            <input type="tel"
+                                   wire:model="novaColocacao"
+                                   oninput="this.value=this.value.replace(/\D/g,'').substring(0,2)"
+                                   placeholder="#"
+                                   maxlength="2"
+                                   class="w-16 border-gray-300 rounded text-sm p-1.5 border text-center focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button wire:click="adicionarAtleta"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-1.5 rounded transition">
+                                Confirmar
+                            </button>
+                            <button wire:click="$set('mostrarFormAtleta', '')"
+                                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded transition">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             {{-- Atletas da prova --}}
             <div class="divide-y divide-gray-100">
