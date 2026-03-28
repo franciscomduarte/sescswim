@@ -21,8 +21,8 @@
                 <input type="date" name="data_nascimento" value="{{ old('data_nascimento') }}" class="w-full border-gray-300 rounded-md shadow-sm p-2 border">
             </div>
             <div>
-                <label class="block text-sm text-gray-600 mb-1">Código Federação</label>
-                <input type="text" name="codigo_federacao" value="{{ old('codigo_federacao') }}" placeholder="Código na federação" class="w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                <label class="block text-sm text-gray-600 mb-1">Registro</label>
+                <input type="text" name="codigo_federacao" value="{{ old('codigo_federacao') }}" placeholder="Registro" class="w-full border-gray-300 rounded-md shadow-sm p-2 border">
             </div>
             <div>
                 <label class="block text-sm text-gray-600 mb-1">Sexo</label>
@@ -51,7 +51,7 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód. Federação</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registro</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sexo</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inscrições</th>
