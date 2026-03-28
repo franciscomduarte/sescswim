@@ -53,9 +53,7 @@
                     @foreach($campeonatos as $c)
                         <option value="{{ $c->id }}" @selected($campeonato?->id == $c->id)>
                             {{ $c->nome }}
-                            @if($c->data_inicio)
-                                ({{ $c->data_inicio->format('d/m/Y') }})
-                            @endif
+                            @if($c->data_inicio)({{ $c->data_inicio->format('d/m/Y') }})@endif
                         </option>
                     @endforeach
                 </select>
@@ -63,7 +61,7 @@
 
             {{-- Sexo --}}
             <div>
-                <label class="block text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Categoria</label>
+                <label class="block text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Sexo</label>
                 <div class="flex rounded-lg overflow-hidden border border-slate-600">
                     @foreach([''=>'Todos','masculino'=>'Masculino','feminino'=>'Feminino'] as $val => $label)
                         <a href="{{ route('placar.index', array_merge(request()->only('campeonato_id','busca'), ['sexo'=>$val])) }}"
@@ -100,36 +98,28 @@
 
     @if(!$campeonato)
         <div class="text-center py-20 text-slate-400">
-            <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2a4 4 0 0 1 8 0v2M3 21h18M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/>
-            </svg>
             <p class="text-lg">Nenhum campeonato encontrado.</p>
         </div>
     @else
 
         {{-- Título do campeonato --}}
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-2">
-            <div>
-                <h2 class="text-2xl font-bold text-white">{{ $campeonato->nome }}</h2>
-                @if($campeonato->data_inicio)
-                    <p class="text-slate-400 text-sm mt-0.5">
-                        {{ $campeonato->data_inicio->format('d/m/Y') }}
-                        @if($campeonato->data_fim && $campeonato->data_fim != $campeonato->data_inicio)
-                            – {{ $campeonato->data_fim->format('d/m/Y') }}
-                        @endif
-                        <span class="ml-2 bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded-full">
-                            Piscina {{ $campeonato->piscina }}
-                        </span>
-                    </p>
-                @endif
-            </div>
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-white">{{ $campeonato->nome }}</h2>
+            @if($campeonato->data_inicio)
+                <p class="text-slate-400 text-sm mt-0.5">
+                    {{ $campeonato->data_inicio->format('d/m/Y') }}
+                    @if($campeonato->data_fim && $campeonato->data_fim != $campeonato->data_inicio)
+                        – {{ $campeonato->data_fim->format('d/m/Y') }}
+                    @endif
+                    <span class="ml-2 bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded-full">
+                        Piscina {{ $campeonato->piscina }}
+                    </span>
+                </p>
+            @endif
         </div>
 
         @if($grupos->isEmpty() && $gruposEquipes->isEmpty())
             <div class="text-center py-16 text-slate-400">
-                <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
-                </svg>
                 <p class="text-lg font-medium">Nenhum resultado disponível ainda.</p>
                 <p class="text-sm mt-1">A página atualiza automaticamente a cada 30 segundos.</p>
             </div>
@@ -137,171 +127,194 @@
 
             {{-- ──── PROVAS INDIVIDUAIS ──── --}}
             @if($grupos->isNotEmpty())
-                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/>
-                    </svg>
-                    Provas Individuais
-                </h3>
+                @foreach($grupos as $sexoLabel => $porCategoria)
+                    @php $isFemininoSexo = $sexoLabel === 'Feminino'; @endphp
 
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10">
-                    @foreach($grupos as $chave => $resultados)
+                    {{-- Divisor de Sexo --}}
+                    <div class="flex items-center gap-3 mb-5 {{ $loop->first ? '' : 'mt-10' }}">
+                        <span class="text-lg">{{ $isFemininoSexo ? '👧' : '👦' }}</span>
+                        <h3 class="text-lg font-extrabold tracking-tight
+                                   {{ $isFemininoSexo ? 'text-pink-400' : 'text-cyan-400' }}">
+                            {{ $sexoLabel }}
+                        </h3>
+                        <div class="flex-1 h-px {{ $isFemininoSexo ? 'bg-pink-800' : 'bg-cyan-800' }}"></div>
+                    </div>
+
+                    @foreach($porCategoria as $categoria => $porProva)
                         @php
-                            [$nomeProva, $modalidade] = explode('|', $chave);
-                            $isFeminino = $modalidade === 'Feminino';
+                            $rotuloCat = \App\Services\CategoriaEsportiva::rotulo($categoria);
                         @endphp
-                        <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg border border-slate-700 flex flex-col">
 
-                            {{-- Cabeçalho do card --}}
-                            <div class="px-4 py-3 flex items-center justify-between
-                                        {{ $isFeminino ? 'bg-gradient-to-r from-pink-900/60 to-purple-900/60' : 'bg-gradient-to-r from-blue-900/60 to-cyan-900/60' }}">
-                                <div>
-                                    <p class="font-extrabold text-lg leading-tight">{{ $nomeProva }}</p>
-                                    <p class="text-xs mt-0.5 {{ $isFeminino ? 'text-pink-300' : 'text-cyan-300' }}">
-                                        {{ $modalidade }}
-                                    </p>
-                                </div>
-                                <span class="text-2xl">{{ $isFeminino ? '👧' : '👦' }}</span>
-                            </div>
-
-                            {{-- Tabela de resultados --}}
-                            <div class="overflow-x-auto flex-1">
-                                <table class="w-full text-sm">
-                                    <thead>
-                                        <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
-                                            <th class="px-3 py-2 text-center w-10">#</th>
-                                            <th class="px-3 py-2 text-left">Atleta</th>
-                                            <th class="px-3 py-2 text-right font-mono">Tempo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-700/50">
-                                        @foreach($resultados->sortBy('colocacao') as $r)
-                                            <tr class="hover:bg-slate-700/40 transition
-                                                       {{ $r->colocacao == 1 ? 'bg-yellow-900/20' : '' }}
-                                                       {{ $r->colocacao == 2 ? 'bg-slate-700/20' : '' }}
-                                                       {{ $r->colocacao == 3 ? 'bg-orange-900/20' : '' }}">
-
-                                                {{-- Colocação com medalha --}}
-                                                <td class="px-3 py-3 text-center">
-                                                    @if($r->colocacao == 1)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-ouro text-white font-black text-xs shadow">1°</span>
-                                                    @elseif($r->colocacao == 2)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-prata text-slate-800 font-black text-xs shadow">2°</span>
-                                                    @elseif($r->colocacao == 3)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-bronze text-white font-black text-xs shadow">3°</span>
-                                                    @else
-                                                        <span class="text-slate-400 font-semibold text-xs">{{ $r->colocacao }}°</span>
-                                                    @endif
-                                                </td>
-
-                                                {{-- Nome --}}
-                                                <td class="px-3 py-3">
-                                                    <span class="font-semibold text-white leading-tight">{{ $r->atleta->nome }}</span>
-                                                    @if($r->rco)
-                                                        <span class="ml-1.5 text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">RCO</span>
-                                                    @endif
-                                                </td>
-
-                                                {{-- Tempo --}}
-                                                <td class="px-3 py-3 text-right">
-                                                    <span class="font-mono font-bold text-base
-                                                                 {{ $r->colocacao == 1 ? 'text-yellow-400' : 'text-white' }}">
-                                                        {{ $r->tempo }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                        {{-- Divisor de Categoria --}}
+                        <div class="flex items-center gap-2 mb-3 {{ $loop->first ? '' : 'mt-7' }}">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full
+                                         {{ $isFemininoSexo ? 'bg-pink-900/60 text-pink-300 border border-pink-700' : 'bg-cyan-900/60 text-cyan-300 border border-cyan-700' }}">
+                                {{ $categoria }}
+                            </span>
+                            <span class="text-sm font-semibold text-slate-300">{{ $rotuloCat }}</span>
+                            <div class="flex-1 h-px bg-slate-700"></div>
                         </div>
+
+                        {{-- Cards das provas desta categoria --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2">
+                            @foreach($porProva as $nomeProva => $resultados)
+                                <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg border border-slate-700 flex flex-col">
+
+                                    {{-- Cabeçalho do card --}}
+                                    <div class="px-4 py-2.5 flex items-center justify-between
+                                                {{ $isFemininoSexo ? 'bg-gradient-to-r from-pink-900/60 to-purple-900/60' : 'bg-gradient-to-r from-blue-900/60 to-cyan-900/60' }}">
+                                        <div>
+                                            <p class="font-extrabold text-base leading-tight">{{ $nomeProva }}</p>
+                                            <p class="text-xs mt-0.5 {{ $isFemininoSexo ? 'text-pink-300' : 'text-cyan-300' }}">
+                                                {{ $rotuloCat }} · {{ $sexoLabel }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Tabela de resultados --}}
+                                    <div class="overflow-x-auto flex-1">
+                                        <table class="w-full text-sm">
+                                            <thead>
+                                                <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
+                                                    <th class="px-3 py-2 text-center w-10">#</th>
+                                                    <th class="px-3 py-2 text-left">Atleta</th>
+                                                    <th class="px-3 py-2 text-right font-mono">Tempo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-700/50">
+                                                @foreach($resultados->sortBy('colocacao') as $r)
+                                                    <tr class="hover:bg-slate-700/40 transition
+                                                               {{ $r->colocacao == 1 ? 'bg-yellow-900/20' : '' }}
+                                                               {{ $r->colocacao == 2 ? 'bg-slate-700/20' : '' }}
+                                                               {{ $r->colocacao == 3 ? 'bg-orange-900/20' : '' }}">
+                                                        <td class="px-3 py-3 text-center">
+                                                            @if($r->colocacao == 1)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-ouro text-white font-black text-xs shadow">1°</span>
+                                                            @elseif($r->colocacao == 2)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-prata text-slate-800 font-black text-xs shadow">2°</span>
+                                                            @elseif($r->colocacao == 3)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-bronze text-white font-black text-xs shadow">3°</span>
+                                                            @else
+                                                                <span class="text-slate-400 font-semibold text-xs">{{ $r->colocacao }}°</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-3">
+                                                            <span class="font-semibold text-white leading-tight">{{ $r->atleta->nome }}</span>
+                                                            @if($r->rco)
+                                                                <span class="ml-1.5 text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">RCO</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-3 text-right">
+                                                            <span class="font-mono font-bold text-base
+                                                                         {{ $r->colocacao == 1 ? 'text-yellow-400' : 'text-white' }}">
+                                                                {{ $r->tempo }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
                     @endforeach
-                </div>
+                @endforeach
             @endif
 
             {{-- ──── REVEZAMENTOS ──── --}}
             @if($gruposEquipes->isNotEmpty())
-                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                    </svg>
-                    Revezamentos
-                </h3>
+                <div class="mt-12">
+                    <div class="flex items-center gap-3 mb-6">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
+                            </svg>
+                            Revezamentos
+                        </h3>
+                        <div class="flex-1 h-px bg-slate-700"></div>
+                    </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    @foreach($gruposEquipes as $chave => $equipes)
+                    @foreach($gruposEquipes as $modalidade => $porProva)
                         @php
-                            [$nomeProva, $modalidade] = explode('|', $chave);
-                            $isFeminino = $modalidade === 'Feminino';
-                            $isMisto    = $modalidade === 'Misto';
+                            $isFemininoEq = $modalidade === 'Feminino';
+                            $isMisto      = $modalidade === 'Misto';
                         @endphp
-                        <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg border border-slate-700 flex flex-col">
 
-                            <div class="px-4 py-3 flex items-center justify-between
-                                        {{ $isMisto ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60'
-                                           : ($isFeminino ? 'bg-gradient-to-r from-pink-900/60 to-purple-900/60'
-                                                          : 'bg-gradient-to-r from-blue-900/60 to-cyan-900/60') }}">
-                                <div>
-                                    <p class="font-extrabold text-lg leading-tight">{{ $nomeProva }}</p>
-                                    <p class="text-xs mt-0.5
-                                              {{ $isMisto ? 'text-purple-300' : ($isFeminino ? 'text-pink-300' : 'text-cyan-300') }}">
-                                        {{ $modalidade }}
-                                    </p>
+                        <div class="flex items-center gap-3 mb-4 {{ $loop->first ? '' : 'mt-8' }}">
+                            <span class="text-lg">{{ $isMisto ? '🤝' : ($isFemininoEq ? '👧' : '👦') }}</span>
+                            <span class="text-base font-extrabold {{ $isMisto ? 'text-purple-400' : ($isFemininoEq ? 'text-pink-400' : 'text-cyan-400') }}">
+                                {{ $modalidade }}
+                            </span>
+                            <div class="flex-1 h-px {{ $isMisto ? 'bg-purple-800' : ($isFemininoEq ? 'bg-pink-800' : 'bg-cyan-800') }}"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2">
+                            @foreach($porProva as $nomeProva => $equipes)
+                                <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg border border-slate-700 flex flex-col">
+                                    <div class="px-4 py-2.5 flex items-center justify-between
+                                                {{ $isMisto ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60'
+                                                   : ($isFemininoEq ? 'bg-gradient-to-r from-pink-900/60 to-purple-900/60'
+                                                                    : 'bg-gradient-to-r from-blue-900/60 to-cyan-900/60') }}">
+                                        <div>
+                                            <p class="font-extrabold text-base leading-tight">{{ $nomeProva }}</p>
+                                            <p class="text-xs mt-0.5 {{ $isMisto ? 'text-purple-300' : ($isFemininoEq ? 'text-pink-300' : 'text-cyan-300') }}">
+                                                {{ $modalidade }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="overflow-x-auto flex-1">
+                                        <table class="w-full text-sm">
+                                            <thead>
+                                                <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
+                                                    <th class="px-3 py-2 text-center w-10">#</th>
+                                                    <th class="px-3 py-2 text-left">Equipe</th>
+                                                    <th class="px-3 py-2 text-right font-mono">Tempo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-700/50">
+                                                @foreach($equipes->sortBy('colocacao') as $equipe)
+                                                    <tr class="hover:bg-slate-700/40 transition
+                                                               {{ $equipe->colocacao == 1 ? 'bg-yellow-900/20' : '' }}
+                                                               {{ $equipe->colocacao == 2 ? 'bg-slate-700/20' : '' }}
+                                                               {{ $equipe->colocacao == 3 ? 'bg-orange-900/20' : '' }}">
+                                                        <td class="px-3 py-3 text-center">
+                                                            @if($equipe->colocacao == 1)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-ouro text-white font-black text-xs shadow">1°</span>
+                                                            @elseif($equipe->colocacao == 2)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-prata text-slate-800 font-black text-xs shadow">2°</span>
+                                                            @elseif($equipe->colocacao == 3)
+                                                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-bronze text-white font-black text-xs shadow">3°</span>
+                                                            @else
+                                                                <span class="text-slate-400 font-semibold text-xs">{{ $equipe->colocacao }}°</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-3">
+                                                            <p class="font-semibold text-white">{{ $equipe->nome }}</p>
+                                                            @if($equipe->membros->isNotEmpty())
+                                                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                                                                    {{ $equipe->membros->map(fn($m) => $m->atleta->nome)->join(' · ') }}
+                                                                </p>
+                                                            @endif
+                                                            @if($equipe->rco)
+                                                                <span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">RCO</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-3 text-right">
+                                                            <span class="font-mono font-bold text-base
+                                                                         {{ $equipe->colocacao == 1 ? 'text-yellow-400' : 'text-white' }}">
+                                                                {{ $equipe->tempo }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                                <span class="text-2xl">{{ $isMisto ? '🤝' : ($isFeminino ? '👧' : '👦') }}</span>
-                            </div>
-
-                            <div class="overflow-x-auto flex-1">
-                                <table class="w-full text-sm">
-                                    <thead>
-                                        <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
-                                            <th class="px-3 py-2 text-center w-10">#</th>
-                                            <th class="px-3 py-2 text-left">Equipe</th>
-                                            <th class="px-3 py-2 text-right font-mono">Tempo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-700/50">
-                                        @foreach($equipes->sortBy('colocacao') as $equipe)
-                                            <tr class="hover:bg-slate-700/40 transition
-                                                       {{ $equipe->colocacao == 1 ? 'bg-yellow-900/20' : '' }}
-                                                       {{ $equipe->colocacao == 2 ? 'bg-slate-700/20' : '' }}
-                                                       {{ $equipe->colocacao == 3 ? 'bg-orange-900/20' : '' }}">
-
-                                                <td class="px-3 py-3 text-center">
-                                                    @if($equipe->colocacao == 1)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-ouro text-white font-black text-xs shadow">1°</span>
-                                                    @elseif($equipe->colocacao == 2)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-prata text-slate-800 font-black text-xs shadow">2°</span>
-                                                    @elseif($equipe->colocacao == 3)
-                                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full medal-bronze text-white font-black text-xs shadow">3°</span>
-                                                    @else
-                                                        <span class="text-slate-400 font-semibold text-xs">{{ $equipe->colocacao }}°</span>
-                                                    @endif
-                                                </td>
-
-                                                <td class="px-3 py-3">
-                                                    <p class="font-semibold text-white">{{ $equipe->nome }}</p>
-                                                    @if($equipe->membros->isNotEmpty())
-                                                        <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                                                            {{ $equipe->membros->map(fn($m) => $m->atleta->nome)->join(' · ') }}
-                                                        </p>
-                                                    @endif
-                                                    @if($equipe->rco)
-                                                        <span class="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">RCO</span>
-                                                    @endif
-                                                </td>
-
-                                                <td class="px-3 py-3 text-right">
-                                                    <span class="font-mono font-bold text-base
-                                                                 {{ $equipe->colocacao == 1 ? 'text-yellow-400' : 'text-white' }}">
-                                                        {{ $equipe->tempo }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                            @endforeach
                         </div>
                     @endforeach
                 </div>
@@ -311,7 +324,6 @@
     @endif
 </main>
 
-{{-- ──────────── RODAPÉ ──────────── --}}
 <footer class="mt-10 py-5 border-t border-slate-700 text-center text-slate-500 text-xs">
     <p>Natação SESC · Resultados ao Vivo</p>
     <p class="mt-1">Página atualiza automaticamente a cada 30 segundos</p>

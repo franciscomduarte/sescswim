@@ -9,6 +9,7 @@ use App\Http\Controllers\PremiacaoController;
 use App\Http\Controllers\IndicesController;
 use App\Http\Controllers\ProvaController;
 use App\Http\Controllers\RelatorioBrasileiroController;
+use App\Http\Controllers\EvolutionController;
 use App\Http\Controllers\PainelPublicoController;
 use App\Http\Controllers\ResultadosController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,7 @@ Route::get('/resultados', [ResultadosController::class, 'index'])->name('resulta
 Route::get('/indices', [IndicesController::class, 'index'])->name('indices.index');
 Route::get('/classificados-brasileiro', [RelatorioBrasileiroController::class, 'index'])->name('brasileiro.index');
 Route::get('/premiacoes', [PremiacaoController::class, 'relatorio'])->name('premiacoes.relatorio');
+Route::get('/evolucao', [EvolutionController::class, 'index'])->name('evolucao.index');
 
 // Rotas protegidas por autenticação
 Route::middleware('auth')->group(function () {

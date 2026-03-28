@@ -21,6 +21,7 @@
                             <a href="{{ route('importacao.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Importação</a>
                         @endauth
                         <a href="{{ route('placar.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Placar ao Vivo</a>
+                        <a href="{{ route('evolucao.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Evolução</a>
                         <a href="{{ route('resultados.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Resultados</a>
                         <a href="{{ route('indices.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Índices</a>
                         @auth
@@ -68,6 +69,7 @@
                 <a href="{{ route('importacao.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Importação</a>
             @endauth
             <a href="{{ route('placar.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Placar ao Vivo</a>
+            <a href="{{ route('evolucao.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Evolução</a>
             <a href="{{ route('resultados.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Resultados</a>
             <a href="{{ route('indices.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Índices</a>
             @auth
