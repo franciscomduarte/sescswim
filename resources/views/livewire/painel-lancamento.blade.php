@@ -22,42 +22,115 @@
         </div>
     </div>
 
+    {{-- Botão + formulário nova prova --}}
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+        <div class="flex items-center justify-between mb-0">
+            <span class="text-sm font-semibold text-gray-700">Provas do campeonato</span>
+            <button wire:click="$set('mostrarFormProva', true)"
+                    class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 font-semibold transition flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nova Prova
+            </button>
+        </div>
+
+        @if($mostrarFormProva)
+            <div class="mt-3 bg-green-50 border border-green-200 rounded-lg p-4">
+                <p class="text-xs font-semibold text-green-800 uppercase tracking-wide mb-3">Adicionar prova ao campeonato</p>
+
+                @if($erroNovaProva)
+                    <div class="mb-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded px-3 py-2">
+                        {{ $erroNovaProva }}
+                    </div>
+                @endif
+
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex-1 min-w-36">
+                        <label class="block text-xs text-gray-500 mb-1">Prova <span class="text-red-500">*</span></label>
+                        <select wire:model="novaProvaFormId"
+                                class="w-full border-gray-300 rounded text-sm p-1.5 border bg-white focus:ring-2 focus:ring-green-500">
+                            <option value="">Selecione…</option>
+                            @foreach($provas as $p)
+                                <option value="{{ $p->id }}">{{ $p->nome }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-28">
+                        <label class="block text-xs text-gray-500 mb-1">Distância <span class="text-red-500">*</span></label>
+                        <select wire:model="novaDistFormId"
+                                class="w-full border-gray-300 rounded text-sm p-1.5 border bg-white focus:ring-2 focus:ring-green-500">
+                            <option value="">Selecione…</option>
+                            @foreach($distancias as $d)
+                                <option value="{{ $d->id }}">{{ $d->metragem }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button wire:click="adicionarProva"
+                                class="bg-green-600 text-white px-4 py-1.5 rounded text-sm font-semibold hover:bg-green-700 transition">
+                            Confirmar
+                        </button>
+                        <button wire:click="$set('mostrarFormProva', false)"
+                                class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300 transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+
     {{-- Lista de Provas --}}
     @forelse($provasAgrupadas as $chaveProva => $inscricoes)
         @php
             $primeiraInscricao = $inscricoes->first();
-            $status = $primeiraInscricao->status;
+            $semAtletas        = $primeiraInscricao === null;
+
+            // Para grupos vazios, busca prova/distância pelo CampeonatoProva
+            if ($semAtletas) {
+                [$cpProvaId, $cpDistId] = explode('-', $chaveProva);
+                $cpRecord = $campeonatoProvas->firstWhere(fn($cp) => $cp->prova_id == $cpProvaId && $cp->distancia_id == $cpDistId);
+            }
+
+            $status      = $semAtletas ? 'Pendente' : $primeiraInscricao->status;
             $statusColor = match($status) {
-                'Pendente' => 'bg-gray-100 border-gray-300 text-gray-600',
+                'Pendente'     => 'bg-gray-100 border-gray-300 text-gray-600',
                 'Em andamento' => 'bg-blue-50 border-blue-400 text-blue-700',
-                'Finalizada' => 'bg-green-50 border-green-400 text-green-700',
-                default => 'bg-gray-100 border-gray-300',
+                'Finalizada'   => 'bg-green-50 border-green-400 text-green-700',
+                default        => 'bg-gray-100 border-gray-300',
             };
             $statusBadge = match($status) {
-                'Pendente' => 'bg-gray-200 text-gray-700',
+                'Pendente'     => 'bg-gray-200 text-gray-700',
                 'Em andamento' => 'bg-blue-200 text-blue-800',
-                'Finalizada' => 'bg-green-200 text-green-800',
-                default => 'bg-gray-200 text-gray-700',
+                'Finalizada'   => 'bg-green-200 text-green-800',
+                default        => 'bg-gray-200 text-gray-700',
             };
-            $ordem = str_pad($primeiraInscricao->ordem_execucao, 2, '0', STR_PAD_LEFT);
+            $ordem       = $semAtletas ? '—' : str_pad($primeiraInscricao->ordem_execucao, 2, '0', STR_PAD_LEFT);
+            $nomeProva   = $semAtletas
+                ? ($cpRecord->distancia->metragem . ' ' . $cpRecord->prova->nome)
+                : ($primeiraInscricao->distancia->metragem . ' ' . $primeiraInscricao->prova->nome);
         @endphp
 
         <div class="mb-3 rounded-lg shadow border-l-4 {{ $statusColor }}">
             {{-- Header da prova --}}
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 bg-white rounded-t-lg">
                 <div class="flex items-center gap-2">
-                    <span class="text-sm font-mono text-gray-400">[{{ $ordem }}]</span>
-                    <span class="font-bold text-gray-800">
-                        {{ $primeiraInscricao->distancia->metragem }} {{ $primeiraInscricao->prova->nome }}
-                    </span>
+                    @if(!$semAtletas)
+                        <span class="text-sm font-mono text-gray-400">[{{ $ordem }}]</span>
+                    @endif
+                    <span class="font-bold text-gray-800">{{ $nomeProva }}</span>
                     <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $statusBadge }}">{{ $status }}</span>
+                    @if($semAtletas)
+                        <span class="text-xs text-gray-400 italic">Sem atletas</span>
+                    @endif
                 </div>
                 <div class="flex gap-2 mt-2 sm:mt-0">
-                    @if($status === 'Pendente')
+                    @if(!$semAtletas && $status === 'Pendente')
                         <button wire:click="iniciarProva('{{ $chaveProva }}')" class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition">
                             Iniciar Prova
                         </button>
-                    @elseif($status === 'Em andamento')
+                    @elseif(!$semAtletas && $status === 'Em andamento')
                         <button wire:click="confirmarProva('{{ $chaveProva }}')" class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition" onclick="return confirm('Confirmar todos os resultados desta prova?')">
                             Confirmar Prova
                         </button>
@@ -77,7 +150,7 @@
                 <div class="px-4 py-3 bg-emerald-50 border-t border-emerald-200">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wide">
-                            Adicionar atleta — {{ $primeiraInscricao->distancia->metragem }} {{ $primeiraInscricao->prova->nome }}
+                            Adicionar atleta — {{ $nomeProva }}
                         </p>
                         <button wire:click="$set('mostrarFormAtleta', '')" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

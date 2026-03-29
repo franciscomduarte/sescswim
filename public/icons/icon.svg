@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1d4ed8"/>
+  <!-- Swimmer body -->
+  <circle cx="256" cy="140" r="44" fill="white"/>
+  <!-- Body -->
+  <path d="M210 200 Q256 260 302 200 L320 320 Q256 360 192 320 Z" fill="white"/>
+  <!-- Arms -->
+  <path d="M210 220 Q140 200 100 230" stroke="white" stroke-width="22" stroke-linecap="round" fill="none"/>
+  <path d="M302 220 Q372 200 412 230" stroke="white" stroke-width="22" stroke-linecap="round" fill="none"/>
+  <!-- Water waves -->
+  <path d="M60 390 Q110 370 160 390 Q210 410 260 390 Q310 370 360 390 Q410 410 452 390"
+        stroke="#93c5fd" stroke-width="18" stroke-linecap="round" fill="none"/>
+  <path d="M60 430 Q110 410 160 430 Q210 450 260 430 Q310 410 360 430 Q410 450 452 430"
+        stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" fill="none"/>
+</svg>

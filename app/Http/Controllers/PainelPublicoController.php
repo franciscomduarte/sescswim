@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campeonato;
+use App\Models\Clube;
 use App\Models\Equipe;
 use App\Models\Resultado;
 use App\Services\CategoriaEsportiva;
@@ -10,14 +11,19 @@ use Illuminate\Http\Request;
 
 class PainelPublicoController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $slug)
     {
-        $campeonatos = Campeonato::orderByDesc('data_inicio')->get();
+        $clube = Clube::where('slug', $slug)->where('ativo', true)->firstOrFail();
+
+        $campeonatos = Campeonato::withoutGlobalScope('clube')
+            ->where('clube_id', $clube->id)
+            ->orderByDesc('data_inicio')
+            ->get();
 
         $campeonatoId = $request->get('campeonato_id', $campeonatos->first()?->id);
         $campeonato   = $campeonatos->firstWhere('id', $campeonatoId);
 
-        $sexo  = $request->get('sexo') ?: '';  // '' = todos, 'masculino' ou 'feminino'
+        $sexo  = $request->get('sexo') ?: '';
         $busca = trim($request->get('busca', ''));
 
         $grupos        = collect();
@@ -39,20 +45,18 @@ class PainelPublicoController extends Controller
 
             $catOrdem = array_flip(CategoriaEsportiva::todas());
 
-            // Agrupamento: Sexo → Categoria → Prova
             $grupos = $query->get()
                 ->groupBy([
                     fn ($r) => $r->atleta->sexo === 'masculino' ? 'Masculino' : 'Feminino',
                     fn ($r) => CategoriaEsportiva::calcular($r->atleta->data_nascimento),
                     fn ($r) => $r->distancia->metragem . ' ' . $r->prova->nome,
                 ])
-                ->sortKeys()   // Feminino antes de Masculino
+                ->sortKeys()
                 ->map(fn ($porCat) => $porCat
-                    ->sortBy(fn ($_, $cat) => $catOrdem[$cat] ?? 99)   // ordem etária
-                    ->map(fn ($porProva) => $porProva->sortKeys())      // provas em ordem alfabética
+                    ->sortBy(fn ($_, $cat) => $catOrdem[$cat] ?? 99)
+                    ->map(fn ($porProva) => $porProva->sortKeys())
                 );
 
-            // Revezamentos: agrupados por Sexo → Prova
             $equipeQuery = Equipe::with(['distancia', 'membros.atleta'])
                 ->where('campeonato_id', $campeonato->id)
                 ->whereNotNull('tempo')
@@ -75,7 +79,7 @@ class PainelPublicoController extends Controller
         }
 
         return view('placar.index', compact(
-            'campeonatos', 'campeonato', 'grupos', 'gruposEquipes', 'sexo', 'busca'
+            'clube', 'campeonatos', 'campeonato', 'grupos', 'gruposEquipes', 'sexo', 'busca'
         ));
     }
 }

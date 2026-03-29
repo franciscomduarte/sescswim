@@ -1,0 +1,34 @@
+{
+  "name": "Natação SESC",
+  "short_name": "SESC Swim",
+  "description": "Sistema de gerenciamento de competições de natação",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#1d4ed8",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Placar ao Vivo",
+      "short_name": "Placar",
+      "url": "/placar",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Evolução de Atletas",
+      "short_name": "Evolução",
+      "url": "/evolucao",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    }
+  ]
+}

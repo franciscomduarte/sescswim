@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placar ao Vivo – Natação SESC</title>
+    <title>Placar ao Vivo – {{ $clube->nome }}</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ $clube->nome }}">
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <meta http-equiv="refresh" content="30">
     <style>
@@ -26,7 +31,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16h18"/>
             </svg>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight leading-none">Natação SESC</h1>
+                <h1 class="text-xl font-extrabold tracking-tight leading-none">{{ $clube->nome }}</h1>
                 <p class="text-blue-300 text-xs">Resultados ao Vivo</p>
             </div>
         </div>
@@ -42,7 +47,7 @@
 {{-- ──────────── FILTROS ──────────── --}}
 <div class="bg-slate-800 border-b border-slate-700 sticky top-[61px] z-40 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-3">
-        <form method="GET" action="{{ route('placar.index') }}"
+        <form method="GET" action="{{ route('placar.show', $clube->slug) }}"
               class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
 
             {{-- Campeonato --}}
@@ -64,7 +69,7 @@
                 <label class="block text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Sexo</label>
                 <div class="flex rounded-lg overflow-hidden border border-slate-600">
                     @foreach([''=>'Todos','masculino'=>'Masculino','feminino'=>'Feminino'] as $val => $label)
-                        <a href="{{ route('placar.index', array_merge(request()->only('campeonato_id','busca'), ['sexo'=>$val])) }}"
+                        <a href="{{ route('placar.show', array_merge(['slug' => $clube->slug], request()->only('campeonato_id','busca'), ['sexo'=>$val])) }}"
                            class="px-3 py-2 text-sm font-medium transition
                                   {{ $sexo === $val ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600' }}">
                             {{ $label }}
@@ -325,9 +330,10 @@
 </main>
 
 <footer class="mt-10 py-5 border-t border-slate-700 text-center text-slate-500 text-xs">
-    <p>Natação SESC · Resultados ao Vivo</p>
+    <p>{{ $clube->nome }} · Resultados ao Vivo</p>
     <p class="mt-1">Página atualiza automaticamente a cada 30 segundos</p>
 </footer>
 
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>

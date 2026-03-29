@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Atleta;
 use App\Models\Campeonato;
+use App\Models\CampeonatoProva;
 use App\Models\Distancia;
 use App\Models\Equipe;
 use App\Models\Inscricao;
@@ -33,6 +34,12 @@ class PainelLancamento extends Component
     public string $novoTempo         = '';
     public string $novaColocacao     = '';
     public string $erroNovoAtleta    = '';
+
+    // Formulário de nova prova no campeonato
+    public bool   $mostrarFormProva  = false;
+    public string $novaProvaFormId   = '';
+    public string $novaDistFormId    = '';
+    public string $erroNovaProva     = '';
 
     // Revezamentos
     public array $temposEquipes = [];
@@ -259,6 +266,37 @@ class PainelLancamento extends Component
         $this->mostrarFormAtleta = '';
     }
 
+    public function adicionarProva()
+    {
+        $this->erroNovaProva = '';
+
+        if (!$this->novaProvaFormId || !$this->novaDistFormId) {
+            $this->erroNovaProva = 'Selecione a prova e a distância.';
+            return;
+        }
+
+        $jaExiste = CampeonatoProva::where([
+            'campeonato_id' => $this->campeonato->id,
+            'prova_id'      => $this->novaProvaFormId,
+            'distancia_id'  => $this->novaDistFormId,
+        ])->exists();
+
+        if ($jaExiste) {
+            $this->erroNovaProva = 'Esta prova/distância já foi adicionada ao campeonato.';
+            return;
+        }
+
+        CampeonatoProva::create([
+            'campeonato_id' => $this->campeonato->id,
+            'prova_id'      => $this->novaProvaFormId,
+            'distancia_id'  => $this->novaDistFormId,
+        ]);
+
+        $this->novaProvaFormId  = '';
+        $this->novaDistFormId   = '';
+        $this->mostrarFormProva = false;
+    }
+
     public function iniciarProva(string $chaveProva)
     {
         [$provaId, $distanciaId] = explode('-', $chaveProva);
@@ -410,7 +448,23 @@ class PainelLancamento extends Component
             );
         }
 
-        return $inscricoes->groupBy(fn($i) => $i->prova_id . '-' . $i->distancia_id);
+        $agrupadas = $inscricoes->groupBy(fn($i) => $i->prova_id . '-' . $i->distancia_id);
+
+        // Inclui provas do campeonato que ainda não têm atletas inscritos
+        if (!$this->filtroStatus && !$this->filtroAtleta) {
+            $cprovs = CampeonatoProva::with(['prova', 'distancia'])
+                ->where('campeonato_id', $this->campeonato->id)
+                ->get();
+
+            foreach ($cprovs as $cp) {
+                $chave = $cp->prova_id . '-' . $cp->distancia_id;
+                if (!$agrupadas->has($chave)) {
+                    $agrupadas[$chave] = collect();
+                }
+            }
+        }
+
+        return $agrupadas;
     }
 
     public function getEquipes()
@@ -429,11 +483,14 @@ class PainelLancamento extends Component
     public function render()
     {
         return view('livewire.painel-lancamento', [
-            'provasAgrupadas' => $this->getProvasAgrupadas(),
-            'equipes'         => $this->getEquipes(),
-            'atletas'         => Atleta::orderBy('nome')->get(),
-            'provas'          => Prova::orderBy('nome')->get(),
-            'distancias'      => Distancia::orderBy('metragem')->get(),
+            'provasAgrupadas'  => $this->getProvasAgrupadas(),
+            'equipes'          => $this->getEquipes(),
+            'atletas'          => Atleta::orderBy('nome')->get(),
+            'provas'           => Prova::orderBy('nome')->get(),
+            'distancias'       => Distancia::orderBy('metragem')->get(),
+            'campeonatoProvas' => CampeonatoProva::with(['prova', 'distancia'])
+                                    ->where('campeonato_id', $this->campeonato->id)
+                                    ->get(),
         ]);
     }
 }

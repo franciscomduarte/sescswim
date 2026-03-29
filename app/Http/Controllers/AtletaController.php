@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Atleta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class AtletaController extends Controller
 {
@@ -20,7 +21,7 @@ class AtletaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255|unique:atletas,nome',
+            'nome' => ['required', 'string', 'max:255', Rule::unique('atletas', 'nome')->where('clube_id', auth()->user()->clube_id)],
             'data_nascimento' => 'nullable|date',
             'codigo_federacao' => 'nullable|string|max:100',
             'sexo' => 'nullable|in:masculino,feminino',
@@ -39,7 +40,7 @@ class AtletaController extends Controller
     public function update(Request $request, Atleta $atleta)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255|unique:atletas,nome,' . $atleta->id,
+            'nome' => ['required', 'string', 'max:255', Rule::unique('atletas', 'nome')->where('clube_id', auth()->user()->clube_id)->ignore($atleta->id)],
             'data_nascimento' => 'nullable|date',
             'codigo_federacao' => 'nullable|string|max:100',
             'sexo' => 'nullable|in:masculino,feminino',

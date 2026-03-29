@@ -10,13 +10,15 @@ use App\Http\Controllers\IndicesController;
 use App\Http\Controllers\ProvaController;
 use App\Http\Controllers\RelatorioBrasileiroController;
 use App\Http\Controllers\EvolutionController;
+use App\Http\Controllers\ListaEsperaController;
 use App\Http\Controllers\PainelPublicoController;
 use App\Http\Controllers\ResultadosController;
+use App\Models\Clube;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('resultados.index');
-});
+    return view('home');
+})->name('home');
 
 // Autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -24,12 +26,36 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rotas públicas
-Route::get('/placar', [PainelPublicoController::class, 'index'])->name('placar.index');
+Route::get('/placar', function () {
+    if (auth()->check() && auth()->user()->clube) {
+        return redirect()->route('placar.show', auth()->user()->clube->slug);
+    }
+    $clube = Clube::where('ativo', true)->first();
+    return $clube
+        ? redirect()->route('placar.show', $clube->slug)
+        : redirect()->route('home');
+})->name('placar.index');
+
+Route::get('/placar/{slug}', [PainelPublicoController::class, 'index'])->name('placar.show');
+
+Route::get('/evolucao', function () {
+    if (auth()->check() && auth()->user()->clube) {
+        return redirect()->route('evolucao.show', auth()->user()->clube->slug);
+    }
+    $clube = Clube::where('ativo', true)->first();
+    return $clube
+        ? redirect()->route('evolucao.show', $clube->slug)
+        : redirect()->route('home');
+})->name('evolucao.index');
+
+Route::get('/evolucao/{slug}', [EvolutionController::class, 'index'])->name('evolucao.show');
+
+Route::get('/calculadora', fn () => view('calculadora'))->name('calculadora');
 Route::get('/resultados', [ResultadosController::class, 'index'])->name('resultados.index');
 Route::get('/indices', [IndicesController::class, 'index'])->name('indices.index');
 Route::get('/classificados-brasileiro', [RelatorioBrasileiroController::class, 'index'])->name('brasileiro.index');
 Route::get('/premiacoes', [PremiacaoController::class, 'relatorio'])->name('premiacoes.relatorio');
-Route::get('/evolucao', [EvolutionController::class, 'index'])->name('evolucao.index');
+Route::post('/lista-espera', [ListaEsperaController::class, 'store'])->name('lista-espera.store');
 
 // Rotas protegidas por autenticação
 Route::middleware('auth')->group(function () {
@@ -54,6 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/campeonatos/{campeonato}/editar', [CampeonatoController::class, 'edit'])->name('campeonatos.edit');
     Route::put('/campeonatos/{campeonato}', [CampeonatoController::class, 'update'])->name('campeonatos.update');
     Route::delete('/campeonatos/{campeonato}', [CampeonatoController::class, 'destroy'])->name('campeonatos.destroy');
+    Route::post('/campeonatos/{campeonato}/provas', [CampeonatoController::class, 'adicionarProva'])->name('campeonatos.adicionar-prova');
+    Route::delete('/campeonatos/{campeonato}/provas/{campeonatoProva}', [CampeonatoController::class, 'removerProva'])->name('campeonatos.remover-prova');
     Route::post('/campeonatos/{campeonato}/inscricoes', [CampeonatoController::class, 'adicionarInscricao'])->name('campeonatos.adicionar-inscricao');
     Route::delete('/campeonatos/{campeonato}/inscricao/{inscricao}', [CampeonatoController::class, 'removerInscricao'])->name('campeonatos.remover-inscricao');
     Route::delete('/campeonatos/{campeonato}/resultado/{resultado}', [CampeonatoController::class, 'removerResultado'])->name('campeonatos.remover-resultado');

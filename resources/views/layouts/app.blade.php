@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - @yield('title', 'Sistema de Natação')</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SESC Swim">
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>[x-cloak]{display:none!important}</style>
     @livewireStyles
@@ -14,7 +20,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-4">
-                    <a href="/" class="text-xl font-bold">Natação SESC</a>
+                    <a href="{{ route('home') }}" class="text-xl font-bold">
+                        {{ auth()->user()?->clube?->nome ?? config('app.name') }}
+                    </a>
                     <div class="hidden md:flex space-x-4 items-center">
                         @auth
                             <a href="{{ route('painel.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Painel</a>
@@ -24,6 +32,7 @@
                         <a href="{{ route('evolucao.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Evolução</a>
                         <a href="{{ route('resultados.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Resultados</a>
                         <a href="{{ route('indices.index') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Índices</a>
+                        <a href="{{ route('calculadora') }}" class="hover:bg-blue-600 px-3 py-2 rounded-md text-sm font-medium">Calculadora</a>
                         @auth
                             <div x-data="{ open: false }" class="relative">
                                 <button @click="open = !open" @click.outside="open = false"
@@ -72,6 +81,7 @@
             <a href="{{ route('evolucao.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Evolução</a>
             <a href="{{ route('resultados.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Resultados</a>
             <a href="{{ route('indices.index') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Índices</a>
+            <a href="{{ route('calculadora') }}" class="block hover:bg-blue-600 px-3 py-2 rounded-md text-sm">Calculadora</a>
             @auth
                 <div x-data="{ open: false }">
                     <button @click="open = !open"
@@ -120,5 +130,10 @@
 
     @livewireScripts
     @stack('scripts')
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
 </body>
 </html>

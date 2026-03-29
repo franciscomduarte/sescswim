@@ -88,42 +88,29 @@
     {{-- Links rápidos --}}
     <div class="flex gap-3">
         <a href="{{ route('painel.show', $campeonato) }}" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-semibold transition">Abrir Painel</a>
-        <a href="{{ route('importacao.index') }}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 text-sm transition">Importar Resultados</a>
     </div>
 
-    {{-- Inscrições por Prova --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ aberto: {{ $errors->hasAny(['atleta_id','prova_id','distancia_id']) || session('error') ? 'true' : 'false' }} }">
+    {{-- Provas do Campeonato --}}
+    <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ abrirProva: false }">
         <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
-            <h2 class="text-lg font-bold text-gray-800">Inscrições por Prova</h2>
-            <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-500">{{ $totais['inscricoes'] }} inscrições</span>
-                <button @click="aberto = !aberto"
-                        class="bg-blue-600 text-white text-sm py-1.5 px-4 rounded-md hover:bg-blue-700 font-semibold transition flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Inscrever Atleta
-                </button>
+            <div>
+                <h2 class="text-lg font-bold text-gray-800">Provas do Campeonato</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ $campeonatoProvas->count() }} prova(s) · {{ $totais['inscricoes'] }} inscrição(ões)</p>
             </div>
+            <button @click="abrirProva = !abrirProva"
+                    class="bg-green-600 text-white text-sm py-1.5 px-4 rounded-md hover:bg-green-700 font-semibold transition flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Adicionar Prova
+            </button>
         </div>
 
-        {{-- Formulário de nova inscrição --}}
-        <div x-show="aberto" x-cloak x-transition class="px-6 py-4 bg-blue-50 border-b border-blue-100">
-            <form action="{{ route('campeonatos.adicionar-inscricao', $campeonato) }}" method="POST">
+        {{-- Formulário adicionar prova --}}
+        <div x-show="abrirProva" x-cloak x-transition class="px-6 py-4 bg-green-50 border-b border-green-100">
+            <form action="{{ route('campeonatos.adicionar-prova', $campeonato) }}" method="POST">
                 @csrf
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Atleta</label>
-                        <select name="atleta_id" required
-                                class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm bg-white">
-                            <option value="">Selecione o atleta…</option>
-                            @foreach($atletas as $atleta)
-                                <option value="{{ $atleta->id }}" {{ old('atleta_id') == $atleta->id ? 'selected' : '' }}>
-                                    {{ $atleta->nome }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Prova</label>
                         <select name="prova_id" required
@@ -151,10 +138,10 @@
                 </div>
                 <div class="mt-3 flex gap-2">
                     <button type="submit"
-                            class="bg-blue-600 text-white py-1.5 px-5 rounded-md hover:bg-blue-700 font-semibold text-sm transition">
-                        Confirmar Inscrição
+                            class="bg-green-600 text-white py-1.5 px-5 rounded-md hover:bg-green-700 font-semibold text-sm transition">
+                        Confirmar
                     </button>
-                    <button type="button" @click="aberto = false"
+                    <button type="button" @click="abrirProva = false"
                             class="bg-gray-200 text-gray-700 py-1.5 px-4 rounded-md hover:bg-gray-300 text-sm transition">
                         Cancelar
                     </button>
@@ -162,38 +149,94 @@
             </form>
         </div>
 
-        @forelse($inscricoes as $nomeProva => $atletasProva)
-            <div class="border-b last:border-b-0">
+        {{-- Lista de provas com atletas --}}
+        @forelse($campeonatoProvas as $cp)
+            @php
+                $chave         = $cp->distancia->metragem . ' ' . $cp->prova->nome;
+                $atletasProva  = $inscricoes->get($cp->prova->nome . ' - ' . $cp->distancia->metragem, collect());
+                $statusProva   = $atletasProva->first()?->status ?? 'Pendente';
+                $badgeClass    = match($statusProva) {
+                    'Em andamento' => 'bg-blue-200 text-blue-800',
+                    'Finalizada'   => 'bg-green-200 text-green-800',
+                    default        => 'bg-gray-200 text-gray-700',
+                };
+            @endphp
+            <div class="border-b last:border-b-0" x-data="{ abrirAtleta: false }">
                 <div class="px-6 py-3 bg-gray-50 flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">{{ $nomeProva }}</span>
-                    @php
-                        $statusProva = $atletasProva->first()->status;
-                        $badgeClass = match($statusProva) {
-                            'Pendente' => 'bg-gray-200 text-gray-700',
-                            'Em andamento' => 'bg-blue-200 text-blue-800',
-                            'Finalizada' => 'bg-green-200 text-green-800',
-                            default => 'bg-gray-200 text-gray-700',
-                        };
-                    @endphp
-                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $badgeClass }}">
-                        {{ $statusProva }} ({{ $atletasProva->count() }} atletas)
-                    </span>
-                </div>
-                <div class="divide-y divide-gray-100">
-                    @foreach($atletasProva as $inscricao)
-                        <div class="px-6 py-2 flex items-center justify-between hover:bg-gray-50">
-                            <span class="text-sm text-gray-700">{{ $inscricao->atleta->nome }}</span>
-                            <form action="{{ route('campeonatos.remover-inscricao', [$campeonato, $inscricao]) }}" method="POST" class="inline" onsubmit="return confirm('Remover inscrição de {{ $inscricao->atleta->nome }}?')">
+                    <div class="flex items-center gap-3">
+                        <span class="font-semibold text-gray-700">{{ $chave }}</span>
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $badgeClass }}">
+                            {{ $statusProva }} ({{ $atletasProva->count() }} atletas)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button @click="abrirAtleta = !abrirAtleta"
+                                class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 font-semibold transition">
+                            + Atleta
+                        </button>
+                        @if($atletasProva->isEmpty())
+                            <form action="{{ route('campeonatos.remover-prova', [$campeonato, $cp]) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('Remover a prova {{ $chave }} do campeonato?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">Remover</button>
                             </form>
-                        </div>
-                    @endforeach
+                        @endif
+                    </div>
                 </div>
+
+                {{-- Form inscrever atleta --}}
+                <div x-show="abrirAtleta" x-cloak x-transition class="px-6 py-3 bg-blue-50 border-b border-blue-100">
+                    <form action="{{ route('campeonatos.adicionar-inscricao', $campeonato) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="prova_id" value="{{ $cp->prova_id }}">
+                        <input type="hidden" name="distancia_id" value="{{ $cp->distancia_id }}">
+                        <div class="flex gap-3 items-end">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-600 mb-1">Atleta</label>
+                                <select name="atleta_id" required
+                                        class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm bg-white">
+                                    <option value="">Selecione o atleta…</option>
+                                    @foreach($atletas as $atleta)
+                                        <option value="{{ $atleta->id }}">{{ $atleta->nome }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="submit"
+                                        class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-semibold text-sm transition">
+                                    Inscrever
+                                </button>
+                                <button type="button" @click="abrirAtleta = false"
+                                        class="bg-gray-200 text-gray-700 py-2 px-3 rounded-md text-sm hover:bg-gray-300 transition">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Atletas inscritos --}}
+                @if($atletasProva->isNotEmpty())
+                    <div class="divide-y divide-gray-100">
+                        @foreach($atletasProva as $inscricao)
+                            <div class="px-6 py-2 flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm text-gray-700">{{ $inscricao->atleta->nome }}</span>
+                                <form action="{{ route('campeonatos.remover-inscricao', [$campeonato, $inscricao]) }}" method="POST"
+                                      class="inline" onsubmit="return confirm('Remover inscrição de {{ $inscricao->atleta->nome }}?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">Remover</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         @empty
-            <div class="px-6 py-8 text-center text-gray-500">Nenhuma inscrição</div>
+            <div class="px-6 py-8 text-center text-gray-500 text-sm">
+                Nenhuma prova adicionada. Clique em <strong>Adicionar Prova</strong> para começar.
+            </div>
         @endforelse
     </div>
 

@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evolução do Atleta – Natação SESC</title>
+    <title>Evolução do Atleta – {{ $clube->nome }}</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ $clube->nome }}">
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -19,9 +24,9 @@
 
     {{-- NAV --}}
     <nav class="bg-blue-900 border-b border-blue-800 px-4 py-3 flex items-center justify-between">
-        <a href="/" class="text-lg font-bold tracking-tight">Natação SESC</a>
+        <a href="/" class="text-lg font-bold tracking-tight">{{ $clube->nome }}</a>
         <div class="flex items-center gap-3 text-sm">
-            <a href="{{ route('placar.index') }}" class="text-blue-300 hover:text-white transition">Placar</a>
+            <a href="{{ route('placar.show', $clube->slug) }}" class="text-blue-300 hover:text-white transition">Placar</a>
             <span class="text-blue-700">|</span>
             <span class="text-white font-semibold">Evolução</span>
         </div>
@@ -29,7 +34,7 @@
 
     {{-- STICKY SELECTOR --}}
     <div class="sticky top-0 z-20 bg-slate-900/95 backdrop-blur border-b border-slate-700 px-4 py-3">
-        <form method="GET" action="{{ route('evolucao.index') }}">
+        <form method="GET" action="{{ route('evolucao.show', $clube->slug) }}">
             <label for="atleta_id" class="block text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Selecionar atleta</label>
             <select id="atleta_id" name="atleta_id"
                     onchange="this.form.submit()"
@@ -230,7 +235,7 @@
 
     {{-- Footer --}}
     <div class="text-center text-xs text-slate-600 py-8">
-        Natação SESC &mdash; Evolução de Atletas
+        {{ $clube->nome }} &mdash; Evolução de Atletas
     </div>
 
     <script>
@@ -310,5 +315,6 @@
         });
     })();
     </script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>

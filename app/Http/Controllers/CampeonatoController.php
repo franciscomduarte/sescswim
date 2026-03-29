@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Atleta;
 use App\Models\Campeonato;
+use App\Models\CampeonatoProva;
 use App\Models\Distancia;
 use App\Models\Inscricao;
 use App\Models\Prova;
@@ -65,7 +66,12 @@ class CampeonatoController extends Controller
         $provas    = Prova::orderBy('nome')->get();
         $distancias = Distancia::orderBy('metragem')->get();
 
-        return view('campeonatos.edit', compact('campeonato', 'inscricoes', 'resultados', 'totais', 'atletas', 'provas', 'distancias'));
+        $campeonatoProvas = CampeonatoProva::with(['prova', 'distancia'])
+            ->where('campeonato_id', $campeonato->id)
+            ->get()
+            ->sortBy(fn ($cp) => $cp->distancia->metragem . ' ' . $cp->prova->nome);
+
+        return view('campeonatos.edit', compact('campeonato', 'inscricoes', 'resultados', 'totais', 'atletas', 'provas', 'distancias', 'campeonatoProvas'));
     }
 
     public function update(Request $request, Campeonato $campeonato)
@@ -86,6 +92,53 @@ class CampeonatoController extends Controller
     {
         $campeonato->delete();
         return redirect()->route('campeonatos.index')->with('success', 'Campeonato excluído!');
+    }
+
+    public function adicionarProva(Request $request, Campeonato $campeonato)
+    {
+        $request->validate([
+            'prova_id'     => 'required|exists:provas,id',
+            'distancia_id' => 'required|exists:distancias,id',
+        ]);
+
+        $jaExiste = CampeonatoProva::where([
+            'campeonato_id' => $campeonato->id,
+            'prova_id'      => $request->prova_id,
+            'distancia_id'  => $request->distancia_id,
+        ])->exists();
+
+        if ($jaExiste) {
+            return redirect()->route('campeonatos.edit', $campeonato)
+                ->with('error', 'Esta prova/distância já foi adicionada a este campeonato.');
+        }
+
+        CampeonatoProva::create([
+            'campeonato_id' => $campeonato->id,
+            'prova_id'      => $request->prova_id,
+            'distancia_id'  => $request->distancia_id,
+        ]);
+
+        return redirect()->route('campeonatos.edit', $campeonato)
+            ->with('success', 'Prova adicionada ao campeonato.');
+    }
+
+    public function removerProva(Campeonato $campeonato, CampeonatoProva $campeonatoProva)
+    {
+        $temInscricoes = Inscricao::where([
+            'campeonato_id' => $campeonato->id,
+            'prova_id'      => $campeonatoProva->prova_id,
+            'distancia_id'  => $campeonatoProva->distancia_id,
+        ])->exists();
+
+        if ($temInscricoes) {
+            return redirect()->route('campeonatos.edit', $campeonato)
+                ->with('error', 'Não é possível remover: existem atletas inscritos nesta prova.');
+        }
+
+        $campeonatoProva->delete();
+
+        return redirect()->route('campeonatos.edit', $campeonato)
+            ->with('success', 'Prova removida do campeonato.');
     }
 
     public function adicionarInscricao(Request $request, Campeonato $campeonato)

@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atleta;
+use App\Models\Clube;
 use App\Models\Resultado;
 use Illuminate\Http\Request;
 
 class EvolutionController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, string $slug)
     {
-        $atletas  = Atleta::orderBy('nome')->get(['id', 'nome', 'sexo', 'data_nascimento']);
+        $clube = Clube::where('slug', $slug)->where('ativo', true)->firstOrFail();
+
+        $atletas = Atleta::withoutGlobalScope('clube')
+            ->where('clube_id', $clube->id)
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'sexo', 'data_nascimento']);
 
         $atletaId = $request->get('atleta_id');
         $atleta   = $atletaId ? $atletas->firstWhere('id', $atletaId) : null;
@@ -42,7 +48,7 @@ class EvolutionController extends Controller
                         'resultados'  => $sorted,
                         'melhor'      => $melhorResult,
                         'melhor_sec'  => $melhorSec,
-                        'delta'       => $delta,   // positivo = melhorou, negativo = piorou
+                        'delta'       => $delta,
                         'labels_json' => $sorted->map(fn ($r) => $r->campeonato->nome)->values()->toJson(),
                         'times_json'  => $temposSec->values()->toJson(),
                     ];
@@ -61,7 +67,7 @@ class EvolutionController extends Controller
             ];
         }
 
-        return view('evolucao.index', compact('atletas', 'atleta', 'evolucao', 'resumo'));
+        return view('evolucao.index', compact('clube', 'atletas', 'atleta', 'evolucao', 'resumo'));
     }
 
     private function parseTime(string $tempo): float
