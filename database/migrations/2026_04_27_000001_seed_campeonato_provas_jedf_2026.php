@@ -9,6 +9,22 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Cria o campeonato se ainda não existir
+        $existe = DB::table('campeonatos')->where('id', self::CAMPEONATO_ID)->exists();
+        if (!$existe) {
+            DB::statement('INSERT INTO campeonatos (id, nome, data_inicio, data_fim, piscina, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+                self::CAMPEONATO_ID,
+                'JOGOS ESCOLARES DF ( SELETIVA JEBS E JOGOS JUVENTUDE)',
+                '2026-04-25',
+                '2026-04-26',
+                '50m',
+                now(),
+                now(),
+            ]);
+            // Reseta a sequence para não colidir com futuros inserts via ORM
+            DB::statement("SELECT setval(pg_get_serial_sequence('campeonatos', 'id'), (SELECT MAX(id) FROM campeonatos))");
+        }
+
         // Provas (estilos) já existentes: 1=Medley, 2=Livre, 3=Borboleta, 4=Costas, 5=Peito
         // Garante que as distâncias existam e recupera seus IDs
         $distancias = collect([
@@ -76,13 +92,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        $distanciaIds = DB::table('distancias')
-            ->whereIn('metragem', ['50M', '100M', '200M', '400M', '800M', '1500M', '4x50M'])
-            ->pluck('id');
-
         DB::table('campeonato_provas')
             ->where('campeonato_id', self::CAMPEONATO_ID)
-            ->whereIn('distancia_id', $distanciaIds)
+            ->delete();
+
+        DB::table('campeonatos')
+            ->where('id', self::CAMPEONATO_ID)
             ->delete();
     }
 };
