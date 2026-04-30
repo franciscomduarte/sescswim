@@ -90,8 +90,29 @@
         <a href="{{ route('painel.show', $campeonato) }}" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-semibold transition">Abrir Painel</a>
     </div>
 
-    {{-- Provas do Campeonato --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ abrirProva: false }">
+    {{-- Abas: Provas / Resultados --}}
+    <div x-data="{ aba: 'provas' }">
+
+    {{-- Tab bar --}}
+    <div class="flex border-b border-gray-200 bg-white rounded-t-lg shadow-sm overflow-hidden">
+        <button @click="aba = 'provas'"
+                :class="aba === 'provas' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 bg-gray-50'"
+                class="px-6 py-3 text-sm font-semibold transition focus:outline-none">
+            Provas do Campeonato
+        </button>
+        <button @click="aba = 'resultados'"
+                :class="aba === 'resultados' ? 'border-b-2 border-blue-600 text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700 bg-gray-50'"
+                class="px-6 py-3 text-sm font-semibold transition focus:outline-none flex items-center gap-2">
+            Resultados por Prova
+            @if($totais['resultados'] > 0)
+                <span class="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">{{ $totais['resultados'] }}</span>
+            @endif
+        </button>
+    </div>
+
+    {{-- Aba Provas --}}
+    <div x-show="aba === 'provas'" x-cloak>
+    <div class="bg-white rounded-b-lg shadow overflow-hidden" x-data="{ abrirProva: false }">
         <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
             <div>
                 <h2 class="text-lg font-bold text-gray-800">Provas do Campeonato</h2>
@@ -239,10 +260,12 @@
             </div>
         @endforelse
     </div>
+    </div>{{-- /aba provas --}}
 
-    {{-- Resultados por Prova --}}
+    {{-- Aba Resultados --}}
+    <div x-show="aba === 'resultados'" x-cloak>
     @if($resultados->count() > 0)
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="bg-white rounded-b-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
             <h2 class="text-lg font-bold text-gray-800">Resultados por Prova</h2>
             <span class="text-sm text-gray-500">{{ $totais['resultados'] }} resultados</span>
@@ -367,7 +390,14 @@
             </div>
         @endforeach
     </div>
+    @else
+    <div class="bg-white rounded-b-lg shadow px-6 py-10 text-center text-gray-500 text-sm">
+        Nenhum resultado registrado para este campeonato ainda.
+    </div>
     @endif
+    </div>{{-- /aba resultados --}}
+
+    </div>{{-- /x-data aba --}}
 
     {{-- Equipes de Revezamento --}}
     <div class="bg-white rounded-lg shadow overflow-hidden">

@@ -201,10 +201,21 @@ class CampeonatoController extends Controller
             'status_lancamento' => 'required|in:Pendente,Lançado,Confirmado',
         ]);
 
+        $colocacao = $validated['colocacao'] ?: null;
+        $medalha = $validated['medalha'] ?? null;
+        if (!$medalha) {
+            $medalha = match ($colocacao) {
+                1 => 'Ouro',
+                2 => 'Prata',
+                3 => 'Bronze',
+                default => 'Nenhuma',
+            };
+        }
+
         $resultado->update([
             'tempo'             => $validated['tempo'] ?: null,
-            'colocacao'         => $validated['colocacao'] ?: null,
-            'medalha'           => $validated['medalha'] ?: null,
+            'colocacao'         => $colocacao,
+            'medalha'           => $medalha,
             'rco'               => $request->boolean('rco'),
             'status_lancamento' => $validated['status_lancamento'],
         ]);
